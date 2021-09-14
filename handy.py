@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 def Rolling_Mean_Var(data):
-    for i in df.columns:
+    for i in data.columns:
         mean = []
         var = []
         for j in range(len(data[i])):
