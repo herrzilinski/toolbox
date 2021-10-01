@@ -43,3 +43,18 @@ def kpss_test(timeseries):
 # The above section of code is provided by Professor R.Jafari
 
 
+def AutoCorrelation(y, tau):
+    y_bar = np.mean(y)
+    T = len(y)
+    nom = np.sum((y[tau:] - y_bar) * (y[:T-tau] - y_bar))
+    dnom = np.sum((y - y_bar)**2)
+    r = nom / dnom
+    return r
+
+
+def ACF_parameter(series, lag):
+    res = []
+    for i in np.abs(np.arange(-lag, lag + 1)):
+        res.append(AutoCorrelation(series, i))
+    return res
+
