@@ -52,9 +52,21 @@ def AutoCorrelation(y, tau):
     return r
 
 
-def ACF_parameter(series, lag):
+def ACF_parameter(series, lag=None):
+    if lag is None:
+        lag = len(series) - 1
     res = []
     for i in np.abs(np.arange(-lag, lag + 1)):
         res.append(AutoCorrelation(series, i))
     return res
+
+
+def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}):
+    if lag is None:
+        lag = len(series) - 1
+    if ax is None:
+        ax = plt.gca()
+    ax.stem(np.linspace(-lag, lag, 2*lag+1), ACF_parameter(series, lag), **plt_kwargs)
+    return ax
+
 
