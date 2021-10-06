@@ -10,8 +10,8 @@ def Rolling_Mean_Var(data):
         mean = []
         var = []
         for j in range(len(data[i])):
-            mean.append(np.mean(data[i].head(j+1)))
-            var.append(np.var(data[i].head(j+1)))
+            mean.append(np.mean(data[i].head(j + 1)))
+            var.append(np.var(data[i].head(j + 1)))
         fig, axs = plt.subplots(2)
         fig.suptitle(f'Rolling Mean & Variance Plot of {i}')
         plt.grid()
@@ -26,11 +26,13 @@ def Rolling_Mean_Var(data):
 def ADF_Cal(x):
     result = adfuller(x)
 
-    print("ADF Statistic: %f" %result[0])
+    print("ADF Statistic: %f" % result[0])
     print('p-value: %f' % result[1])
     print('Critical Values:')
     for key, value in result[4].items():
         print('\t%s: %.3f' % (key, value))
+
+
 # The above section of code is provided by Professor R.Jafari
 
 
@@ -39,23 +41,26 @@ def kpss_test(timeseries):
     kpsstest = kpss(timeseries, regression='c', nlags="auto")
     kpss_output = pd.Series(kpsstest[0:3], index=['Test Statistic', 'p-value', 'Lags Used'])
     for key, value in kpsstest[3].items():
-        kpss_output['Critical Value (%s)'%key] = value
+        kpss_output['Critical Value (%s)' % key] = value
     print(kpss_output)
+
+
 # The above section of code is provided by Professor R.Jafari
 
 
 def AutoCorrelation(y, tau):
-    y = [x for x in y if np.isnan(x) == False]
+    # y = [x for x in y if np.isnan(x) == False]
     y_bar = np.mean(y)
     T = len(y)
-    nom = np.sum((y[tau:] - y_bar) * (y[:T-tau] - y_bar))
-    dnom = np.sum((y - y_bar)**2)
+    nom = np.sum((y[tau:] - y_bar) * (y[:T - tau] - y_bar))
+    dnom = np.sum((y - y_bar) ** 2)
     r = nom / dnom
     return r
 
 
-def ACF_parameter(series, lag=None):
-    series = [x for x in series if np.isnan(x) == False]
+def ACF_parameter(series, lag=None, removeNa=False):
+    if removeNa:
+        series = [x for x in series if np.isnan(x) == False]
     if lag is None:
         lag = len(series) - 1
     res = []
@@ -64,13 +69,16 @@ def ACF_parameter(series, lag=None):
     return res
 
 
-def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}):
-    series = [x for x in series if np.isnan(x) == False]
+def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNa=False):
+    if removeNa:
+        series = [x for x in series if np.isnan(x) == False]
     if lag is None:
         lag = len(series) - 1
     if ax is None:
         ax = plt.gca()
-    ax.stem(np.linspace(-lag, lag, 2*lag+1), ACF_parameter(series, lag), **plt_kwargs)
+    ax.stem(np.linspace(-lag, lag, 2 * lag + 1), ACF_parameter(series, lag), **plt_kwargs)
+    m = 1.96/np.sqrt(2*len(series)-1)
+    ax.axhspan(-m, m, alpha=0.2, color='blue')
     ax.set(xlabel='Lag', ylabel='Auto-Correlation')
     return ax
 
@@ -89,5 +97,3 @@ def backward_selection(y, x, maxp=0.05):
         if not updated:
             break
     return lm
-
-
