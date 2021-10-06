@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import statsmodels.api as sm
 from statsmodels.tsa.stattools import adfuller, kpss
 
 
@@ -67,6 +68,23 @@ def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}):
     if ax is None:
         ax = plt.gca()
     ax.stem(np.linspace(-lag, lag, 2*lag+1), ACF_parameter(series, lag), **plt_kwargs)
+    ax.set(xlabel='Lag', ylabel='Auto-Correlation')
     return ax
+
+
+def backward_selection(y, x, maxp=0.05):
+    feature = list(x.columns)
+    while True:
+        updated = False
+        lm = sm.OLS(y, x[feature]).fit()
+        p_val = lm.pvalues
+        if p_val.max() > maxp:
+            updated = True
+            dropped = p_val.idxmax()
+            feature.remove(dropped)
+            print(f'Dropped feature {dropped} with p-value {p_val.max():.4f}')
+        if not updated:
+            break
+    return lm
 
 
