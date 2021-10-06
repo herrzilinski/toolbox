@@ -61,6 +61,8 @@ def AutoCorrelation(y, tau):
 def ACF_parameter(series, lag=None, removeNa=False):
     if removeNa:
         series = [x for x in series if np.isnan(x) == False]
+    else:
+        series = list(series)
     if lag is None:
         lag = len(series) - 1
     res = []
@@ -72,6 +74,8 @@ def ACF_parameter(series, lag=None, removeNa=False):
 def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNa=False):
     if removeNa:
         series = [x for x in series if np.isnan(x) == False]
+    else:
+        series = list(series)
     if lag is None:
         lag = len(series) - 1
     if ax is None:
