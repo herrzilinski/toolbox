@@ -64,6 +64,7 @@ def ACF_parameter(series, lag=None):
 
 
 def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}):
+    series = [x for x in series if np.isnan(x) == False]
     if lag is None:
         lag = len(series) - 1
     if ax is None:
