@@ -55,6 +55,7 @@ def AutoCorrelation(y, tau):
 
 
 def ACF_parameter(series, lag=None):
+    series = [x for x in series if np.isnan(x) == False]
     if lag is None:
         lag = len(series) - 1
     res = []
