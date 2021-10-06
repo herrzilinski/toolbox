@@ -45,6 +45,7 @@ def kpss_test(timeseries):
 
 
 def AutoCorrelation(y, tau):
+    y = list(y)
     y_bar = np.mean(y)
     T = len(y)
     nom = np.sum((y[tau:] - y_bar) * (y[:T-tau] - y_bar))
