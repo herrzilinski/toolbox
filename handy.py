@@ -101,3 +101,47 @@ def backward_selection(y, x, maxp=0.05):
         if not updated:
             break
     return lm
+
+
+def MovingAverage_Cal(series, m, m2=None):
+    res = []
+    if m%2 == 1:
+        k = int((m-1)/2)
+        res.extend(np.zeros(k) + np.nan)
+        for i in range(len(series)-2*k):
+            new = np.average(series[i:i+m])
+            res.append(new)
+    else:
+        k = int(m/2-1)
+        res.extend(np.zeros(k) + np.nan)
+        for i in range(len(series)-m+1):
+            new = np.average(series[i:i + m])
+            res.append(new)
+    return res
+
+
+def MovingAverage_Cal(series, m, m2=None):
+    res = []
+    if m%2 == 1:
+        k = int((m-1)/2)
+        res.extend(np.zeros(k) + np.nan)
+        for i in range(len(series)-2*k):
+            new = np.average(series[i:i+m])
+            res.append(new)
+    else:
+        if m2 is None:
+            m2 = int(input('Please provide the second MA order'))
+            if m2%2 == 1 or m2 <= 0:
+                raise Exception('Second MA order must be even number larger than 0.')
+        temp = []
+        k = int(m/2-1)
+        temp.extend(np.zeros(k) + np.nan)
+        for i in range(len(series)-m+1):
+            new = np.average(series[i : i + m])
+            temp.append(new)
+        res.extend(np.zeros(k+1) + np.nan)
+        for i in range(len(temp)-m2):
+            new = np.average(temp[i+k : i + k + m2])
+            res.append(new)
+
+    return res
