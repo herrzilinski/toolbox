@@ -104,23 +104,8 @@ def backward_selection(y, x, maxp=0.05):
 
 
 def MovingAverage_Cal(series, m, m2=None):
-    res = []
-    if m%2 == 1:
-        k = int((m-1)/2)
-        res.extend(np.zeros(k) + np.nan)
-        for i in range(len(series)-2*k):
-            new = np.average(series[i:i+m])
-            res.append(new)
-    else:
-        k = int(m/2-1)
-        res.extend(np.zeros(k) + np.nan)
-        for i in range(len(series)-m+1):
-            new = np.average(series[i:i + m])
-            res.append(new)
-    return res
-
-
-def MovingAverage_Cal(series, m, m2=None):
+    if m == 1 and m2 == 2:
+        raise Exception('MA order of 1, 2 is not acceptable.')
     res = []
     if m%2 == 1:
         k = int((m-1)/2)
@@ -143,5 +128,8 @@ def MovingAverage_Cal(series, m, m2=None):
         for i in range(len(temp)-m2):
             new = np.average(temp[i+k : i + k + m2])
             res.append(new)
-
+    if type(series) == pd.Series:
+        res = pd.Series(res, index=series.index[:len(res)])
     return res
+
+
