@@ -103,7 +103,9 @@ def backward_selection(y, x, maxp=0.05):
     return lm
 
 
-def MovingAverage_Cal(series, m, m2=None):
+def MovingAverage_Cal(series, m=None, m2=None):
+    if m is None:
+        m = int(input('Please provide the order of MA'))
     if m == 1 and m2 == 2:
         raise Exception('MA order of 1, 2 is not acceptable.')
     res = []
@@ -131,5 +133,6 @@ def MovingAverage_Cal(series, m, m2=None):
     if type(series) == pd.Series:
         res = pd.Series(res, index=series.index[:len(res)])
     return res
+
 
 
