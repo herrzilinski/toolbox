@@ -5,23 +5,24 @@ import statsmodels.api as sm
 from statsmodels.tsa.stattools import adfuller, kpss
 
 
-def Rolling_Mean_Var(data):
-    for i in data.columns:
-        mean = []
-        var = []
-        for j in range(len(data[i])):
-            mean.append(np.mean(data[i].head(j + 1)))
-            var.append(np.var(data[i].head(j + 1)))
-        fig, axs = plt.subplots(2)
-        fig.suptitle(f'Rolling Mean & Variance Plot of {i}')
-        plt.grid()
-        axs[0].plot(mean)
-        axs[0].set(ylabel='Mean')
-        axs[1].plot(var, 'tab:orange')
-        axs[1].set(ylabel='Variance')
-        plt.xlabel('# of Samples')
-        fig.show()
-
+def Rolling_Mean_Var(data, dataname=None):
+    mean = []
+    var = []
+    for j in range(len(data)):
+        mean.append(np.mean(data[:j+1]))
+        var.append(np.var(data[:j+1]))
+    fig, axs = plt.subplots(2)
+    if dataname is None:
+        fig.suptitle(f'Rolling Mean & Variance Plot')
+    else:
+        fig.suptitle(f'Rolling Mean & Variance Plot of {dataname}')
+    plt.grid()
+    axs[0].plot(mean)
+    axs[0].set(ylabel='Mean')
+    axs[1].plot(var, 'tab:orange')
+    axs[1].set(ylabel='Variance')
+    plt.xlabel('# of Samples')
+    fig.show()
 
 def ADF_Cal(x):
     result = adfuller(x)
