@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from statsmodels.tsa.stattools import adfuller, kpss
+from scipy import signal
 
 
 def Rolling_Mean_Var(data, dataname=None):
@@ -16,11 +17,12 @@ def Rolling_Mean_Var(data, dataname=None):
         fig.suptitle(f'Rolling Mean & Variance Plot')
     else:
         fig.suptitle(f'Rolling Mean & Variance Plot of {dataname}')
-    plt.grid()
     axs[0].plot(mean)
     axs[0].set(ylabel='Mean')
+    axs[0].grid()
     axs[1].plot(var, 'tab:orange')
     axs[1].set(ylabel='Variance')
+    axs[1].grid()
     plt.xlabel('# of Samples')
     fig.show()
 
@@ -110,7 +112,7 @@ def MovingAverage_Cal(series, m=None, m2=None):
     if m == 1 and m2 == 2:
         raise Exception('MA order of 1, 2 is not acceptable.')
     res = []
-    if m%2 == 1:
+    if m % 2 == 1:
         k = int((m-1)/2)
         res.extend(np.zeros(k) + np.nan)
         for i in range(len(series)-2*k):
@@ -119,21 +121,86 @@ def MovingAverage_Cal(series, m=None, m2=None):
     else:
         if m2 is None:
             m2 = int(input('Please provide the second MA order'))
-            if m2%2 == 1 or m2 <= 0:
+            if m2 % 2 == 1 or m2 <= 0:
                 raise Exception('Second MA order must be even number larger than 0.')
         temp = []
         k = int(m/2-1)
         temp.extend(np.zeros(k) + np.nan)
         for i in range(len(series)-m+1):
-            new = np.average(series[i : i + m])
+            new = np.average(series[i:i+m])
             temp.append(new)
         res.extend(np.zeros(k+1) + np.nan)
         for i in range(len(temp)-m2):
-            new = np.average(temp[i+k : i + k + m2])
+            new = np.average(temp[i+k:i+k+m2])
             res.append(new)
     if type(series) == pd.Series:
         res = pd.Series(res, index=series.index[:len(res)])
     return res
 
 
+class AR_process:
+    def generate(self, param=None, size=None):
+        if size is None:
+            size = int(input('Please enter the number of samples'))
 
+        if param is None:
+            order = int(input('Please enter the order of AR process'))
+            param = [float(x) for x in input('Please enter the corresponding parameters of AR process').split(',')]
+            if order != len(param):
+                raise Exception('Number of parameter does not match with AR order given.')
+        else:
+            order = int(len(param))
+
+        e = np.random.normal(0, 1, size)
+        nom = [1]
+        nom.extend(np.zeros(order))
+        den = [1]
+        den.extend(float(z) for z in param)
+        system = (nom, den, 1)
+        t, y_res = signal.dlsim(system, e)
+
+        return y_res
+
+    def param_estimation(self, data, order):
+        if type(data) == np.ndarray:
+            data = pd.Series(data.flat)
+        inter = list(np.zeros(order))
+        inter += data.tolist()
+
+        X = []
+        for i in range(len(data)):
+            new = []
+            for j in range(order):
+                new.append(inter[i+j])
+            X.append(new)
+
+        X = pd.DataFrame(X)
+        X = X.loc[:, ::-1]
+        beta = np.linalg.inv(X.T @ X) @ X.T @ data
+
+        return beta
+
+
+class MA_process:
+    def generate(self, param=None, size=None):
+        if size is None:
+            size = int(input('Please enter the number of samples'))
+
+        if param is None:
+            order = int(input('Please enter the order of MA process'))
+            param = [float(x) for x in input('Please enter the corresponding parameters of MA process').split(',')]
+            if order != len(param):
+                raise Exception('Number of parameter does not match with MA order given.')
+        else:
+            order = int(len(param))
+
+        e = np.random.normal(0, 1, size)
+        nom = [1]
+        nom.extend(float(z) for z in param)
+        den = [1]
+        den.extend(np.zeros(order))
+        system = (nom, den, 1)
+        t, y_res = signal.dlsim(system, e)
+        y_res = pd.Series(y_res.flat)
+
+        return y_res
