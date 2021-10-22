@@ -80,7 +80,7 @@ def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNa=False):
         lag = len(series) - 1
     if ax is None:
         ax = plt.gca()
-    ax.stem(np.linspace(-lag, lag, 2 * lag + 1), ACF_parameter(series, lag), **plt_kwargs)
+    ax.stem(np.linspace(-lag, lag, 2 * lag + 1), ACF_parameter(series, lag), markerfmt='ro', **plt_kwargs)
     m = 1.96/np.sqrt(2*len(series)-1)
     ax.axhspan(-m, m, alpha=0.2, color='blue')
     ax.set(xlabel='Lag', ylabel='Auto-Correlation')
