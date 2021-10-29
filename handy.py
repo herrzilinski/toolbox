@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 import statsmodels.api as sm
 from statsmodels.tsa.stattools import adfuller, kpss
 from scipy import signal
@@ -61,21 +62,22 @@ def AutoCorrelation(y, tau):
     return r
 
 
-def ACF_parameter(series, lag=None, removeNa=False):
-    if removeNa:
+def ACF_parameter(series, lag=None, removeNA=False):
+    if removeNA:
         series = [x for x in series if np.isnan(x) == False]
     else:
         series = list(series)
     if lag is None:
         lag = len(series) - 1
     res = []
-    for i in np.abs(np.arange(-lag, lag + 1)):
+    for i in np.arange(0, lag + 1):
         res.append(AutoCorrelation(series, i))
+        res = np.concatenate((np.reshape(res[::-1], lag + 1), res[1:]))
     return res
 
 
-def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNa=False):
-    if removeNa:
+def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNA=False):
+    if removeNA:
         series = [x for x in series if np.isnan(x) == False]
     else:
         series = list(series)
@@ -88,6 +90,48 @@ def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNa=False):
     ax.axhspan(-m, m, alpha=0.2, color='blue')
     ax.set(xlabel='Lag', ylabel='Auto-Correlation')
     return ax
+
+
+def GPAC_cal(series, lag, L, removeNA=False):
+    ry_2 = ACF_parameter(series, lag, removeNA)
+    if L <= 3:
+        raise Exception('Length of the table is recommended to be at least 4')
+    table = []
+    for j in range(L):
+        newrow = []
+        for k in range(1, L + 1):
+            num = np.array([]).reshape(k, 0)
+            for p in range(k):
+                if p != k - 1:
+                    newcol = []
+                    for q in range(k):
+                        newcol.append([ry_2[lag - 1 + j + q - p]])
+                    num = np.hstack((num, newcol))
+                else:
+                    newcol = []
+                    for q in range(k):
+                        newcol.append([ry_2[lag + j + q]])
+                    num = np.hstack((num, newcol))
+
+            den = np.array([]).reshape(k, 0)
+            for p in range(k):
+                newcol = []
+                for q in range(k):
+                    newcol.append([ry_2[lag - 1 + j + q - p]])
+                den = np.hstack((den, newcol))
+
+            # Cramer's Rule
+            phi = np.round(np.linalg.det(num) / np.linalg.det(den), 3)
+            newrow.append(phi)
+        table.append(newrow)
+
+    table = pd.DataFrame(table)
+    table.columns = [str(x) for x in range(1, L + 1)]
+
+    sns.heatmap(table, annot=True)
+    plt.title(f'GPAC Table')
+    plt.show()
+
 
 
 def backward_selection(y, x, maxp=0.05):
