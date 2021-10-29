@@ -72,7 +72,7 @@ def ACF_parameter(series, lag=None, removeNA=False):
     res = []
     for i in np.arange(0, lag + 1):
         res.append(AutoCorrelation(series, i))
-        res = np.concatenate((np.reshape(res[::-1], lag + 1), res[1:]))
+    res = np.concatenate((np.reshape(res[::-1], lag + 1), res[1:]))
     return res
 
 
