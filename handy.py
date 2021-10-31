@@ -92,8 +92,10 @@ def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNA=False):
     return ax
 
 
-def GPAC_cal(series, lag, L, removeNA=False):
-    ry_2 = ACF_parameter(series, lag, removeNA)
+def GPAC_cal(ry_2, L, removeNA=False):
+    if len(ry_2) % 2 != 1 or np.sum([ry_2[i] == ry_2[-i-1] for i in range(int((len(ry_2)-1)/2))]) != int((len(ry_2)-1)/2):
+        ry_2 = np.concatenate((np.reshape(ry_2[::-1], len(ry_2)), ry_2[1:]))
+    lag = int((len(ry_2)-1)/2)
     if L <= 3:
         raise Exception('Length of the table is recommended to be at least 4')
     table = []
@@ -129,7 +131,7 @@ def GPAC_cal(series, lag, L, removeNA=False):
     table.columns = [str(x) for x in range(1, L + 1)]
 
     sns.heatmap(table, annot=True)
-    plt.title(f'GPAC Table')
+    plt.title(f'Generalized Partial AutoCorrelation Table')
     plt.show()
 
 
