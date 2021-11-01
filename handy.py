@@ -62,30 +62,33 @@ def AutoCorrelation(y, tau):
     return r
 
 
-def ACF_parameter(series, lag=None, removeNA=False):
+def ACF_parameter(series, lag=None, removeNA=False, two_sided=False):
+    T = len(series)
     if removeNA:
         series = [x for x in series if np.isnan(x) == False]
     else:
         series = list(series)
     if lag is None:
-        lag = len(series) - 1
+        lag = min(int(10 * np.log10(T)), T - 1)
     res = []
     for i in np.arange(0, lag + 1):
         res.append(AutoCorrelation(series, i))
-    res = np.concatenate((np.reshape(res[::-1], lag + 1), res[1:]))
+    if two_sided:
+        res = np.concatenate((np.reshape(res[::-1], lag + 1), res[1:]))
     return res
 
 
 def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNA=False):
+    T = len(series)
     if removeNA:
         series = [x for x in series if np.isnan(x) == False]
     else:
         series = list(series)
     if lag is None:
-        lag = len(series) - 1
+        lag = min(int(10 * np.log10(T)), T - 1)
     if ax is None:
         ax = plt.gca()
-    ax.stem(np.linspace(-lag, lag, 2 * lag + 1), ACF_parameter(series, lag), markerfmt='ro', **plt_kwargs)
+    ax.stem(np.linspace(-lag, lag, 2 * lag + 1), ACF_parameter(series, lag, two_sided=True), markerfmt='ro', **plt_kwargs)
     m = 1.96/np.sqrt(2*len(series)-1)
     ax.axhspan(-m, m, alpha=0.2, color='blue')
     ax.set(xlabel='Lag', ylabel='Auto-Correlation')
