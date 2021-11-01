@@ -92,10 +92,10 @@ def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNA=False):
     return ax
 
 
-def GPAC_cal(ry_2, L, removeNA=False):
+def GPAC_cal(ry_2, L):
     if len(ry_2) % 2 != 1 or np.sum([ry_2[i] == ry_2[-i-1] for i in range(int((len(ry_2)-1)/2))]) != int((len(ry_2)-1)/2):
         ry_2 = np.concatenate((np.reshape(ry_2[::-1], len(ry_2)), ry_2[1:]))
-    lag = int((len(ry_2)-1)/2)
+    center = int((len(ry_2)-1)/2)
     if L <= 3:
         raise Exception('Length of the table is recommended to be at least 4')
     table = []
@@ -107,19 +107,19 @@ def GPAC_cal(ry_2, L, removeNA=False):
                 if p != k - 1:
                     newcol = []
                     for q in range(k):
-                        newcol.append([ry_2[lag - 1 + j + q - p]])
+                        newcol.append([ry_2[center + j + q - p]])
                     num = np.hstack((num, newcol))
                 else:
                     newcol = []
                     for q in range(k):
-                        newcol.append([ry_2[lag + j + q]])
+                        newcol.append([ry_2[center + 1 + j + q]])
                     num = np.hstack((num, newcol))
 
             den = np.array([]).reshape(k, 0)
             for p in range(k):
                 newcol = []
                 for q in range(k):
-                    newcol.append([ry_2[lag - 1 + j + q - p]])
+                    newcol.append([ry_2[center + j + q - p]])
                 den = np.hstack((den, newcol))
 
             # Cramer's Rule
@@ -132,6 +132,7 @@ def GPAC_cal(ry_2, L, removeNA=False):
 
     sns.heatmap(table, annot=True)
     plt.title(f'Generalized Partial AutoCorrelation Table')
+    plt.tight_layout
     plt.show()
 
 
