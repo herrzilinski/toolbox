@@ -27,6 +27,7 @@ def Rolling_Mean_Var(data, dataname=None):
     plt.xlabel('# of Samples')
     fig.show()
 
+
 def ADF_Cal(x):
     result = adfuller(x)
 
@@ -95,16 +96,16 @@ def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNA=False):
     return ax
 
 
-def GPAC_cal(ry_2, L):
-    if len(ry_2) % 2 != 1 or np.sum([ry_2[i] == ry_2[-i-1] for i in range(int((len(ry_2)-1)/2))]) != int((len(ry_2)-1)/2):
+def GPAC_cal(ry_2, Lj, Lk):
+    if not np.array_equal(ry_2, ry_2[::-1]):
         ry_2 = np.concatenate((np.reshape(ry_2[::-1], len(ry_2)), ry_2[1:]))
     center = int((len(ry_2)-1)/2)
-    if L <= 3:
+    if min(Lk, Lj) <= 3:
         raise Exception('Length of the table is recommended to be at least 4')
     table = []
-    for j in range(L):
+    for j in range(Lj):
         newrow = []
-        for k in range(1, L + 1):
+        for k in range(1, Lk + 1):
             num = np.array([]).reshape(k, 0)
             for p in range(k):
                 if p != k - 1:
@@ -131,11 +132,11 @@ def GPAC_cal(ry_2, L):
         table.append(newrow)
 
     table = pd.DataFrame(table)
-    table.columns = [str(x) for x in range(1, L + 1)]
+    table.columns = [str(x) for x in range(1, Lk + 1)]
 
     sns.heatmap(table, annot=True)
     plt.title(f'Generalized Partial AutoCorrelation Table')
-    plt.tight_layout
+    plt.tight_layout()
     plt.show()
 
 
@@ -254,3 +255,60 @@ class MA_process:
         y_res = pd.Series(y_res.flat)
 
         return y_res
+
+
+class ARMA_Generate:
+
+    def __init__(self, mean_e=None, var_e=None, size=None, ARparam=None, MAparam=None, arma_process=None, ry_2=None):
+        self.mean_e = mean_e
+        self.var_e = var_e
+        self.size = size
+        self.ARparam = ARparam
+        self.MAparam = MAparam
+        self.arma_process = arma_process
+        self.ry_2 = ry_2
+
+    def samples(self):
+        if self.size is None:
+            self.size = int(input('Enter the number of data samples:'))
+        if self.mean_e is None:
+            self.mean_e = float(input('Enter the mean of white noise:'))
+        if self.var_e is None:
+            self.var_e = float(input('Enter the variance of white noise:'))
+        if self.ARparam is None:
+            self.ARparam = [float(x) for x in input('Enter the coefficients of AR:\n'
+                                                    'e.g. 0.5, 0.2').split(',')]
+        if self.MAparam is None:
+            self.MAparam = [float(x) for x in input('Enter the coefficients of MA:\n'
+                                                    'e.g. 0.5, -0.4').split(',')]
+
+        params = [self.ARparam, self.MAparam]
+        maxorder = max(len(self.ARparam), len(self.MAparam))
+
+        for i in range(len(params)):
+            if len(params[i]) < maxorder:
+                params[i] = np.r_[params[i], np.zeros(maxorder - len(params[i]))]
+
+        self.ARparam, self.MAparam = params
+        ar = np.r_[1, self.ARparam]
+        ma = np.r_[1, self.MAparam]
+        self.arma_process = sm.tsa.ArmaProcess(ar, ma)
+        mean_y = self.mean_e * (1 + np.sum(self.MAparam)) / (1 + np.sum(self.ARparam))
+        y = self.arma_process.generate_sample(self.size, np.sqrt(self.var_e) + mean_y)
+        return y
+
+    def thoretcial_ACF(self, lag, arma_process=None, two_sided=False):
+        if arma_process is not None:
+            ry = arma_process.acf(lags=lag+1)
+        else:
+            ry = self.arma_process.acf(lags=lag+1)
+        if two_sided:
+            self.ry_2 = self.two_sided(ry)
+            return self.ry_2
+        else:
+            return ry
+
+    def two_sided(self, ry):
+        ry_2 = np.concatenate((np.reshape(ry[::-1], len(ry)), ry[1:]))
+        return ry_2
+
