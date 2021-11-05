@@ -96,7 +96,7 @@ def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNA=False):
     return ax
 
 
-def GPAC_cal(ry_2, Lj, Lk):
+def GPAC_cal(ry_2, Lj, Lk, cmap='GnBu_r'):
     if not np.array_equal(ry_2, ry_2[::-1]):
         ry_2 = np.concatenate((np.reshape(ry_2[::-1], len(ry_2)), ry_2[1:]))
     center = int((len(ry_2)-1)/2)
@@ -134,7 +134,7 @@ def GPAC_cal(ry_2, Lj, Lk):
     table = pd.DataFrame(table)
     table.columns = [str(x) for x in range(1, Lk + 1)]
 
-    sns.heatmap(table, annot=True)
+    sns.heatmap(table, annot=True, cmap=cmap)
     plt.title(f'Generalized Partial AutoCorrelation Table')
     plt.tight_layout()
     plt.show()
