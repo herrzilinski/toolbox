@@ -76,6 +76,8 @@ def ACF_parameter(series, lag=None, removeNA=False, two_sided=False):
         res.append(AutoCorrelation(series, i))
     if two_sided:
         res = np.concatenate((np.reshape(res[::-1], lag + 1), res[1:]))
+    else:
+        res = np.array(res)
     return res
 
 
