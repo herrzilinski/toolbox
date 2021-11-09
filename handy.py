@@ -98,9 +98,12 @@ def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNA=False):
     return ax
 
 
-def GPAC_cal(ry_2, Lj, Lk, cmap='RdBu'):
-    if not np.array_equal(ry_2, ry_2[::-1]):
-        ry_2 = np.concatenate((np.reshape(ry_2[::-1], len(ry_2)), ry_2[1:]))
+def GPAC_cal(series, lags, Lj, Lk, cmap='RdBu', ry_2=None):
+    if ry_2 is not None:
+        if not np.array_equal(ry_2, ry_2[::-1]):
+            ry_2 = np.concatenate((np.reshape(ry_2[::-1], len(ry_2)), ry_2[1:]))
+    else:
+        ry_2 = ACF_parameter(series, lags, two_sided=True)
     center = int((len(ry_2)-1)/2)
     if min(Lk, Lj) <= 3:
         raise Exception('Length of the table is recommended to be at least 4')
