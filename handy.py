@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
+from scipy.stats import chi2
 from statsmodels.tsa.stattools import adfuller, kpss
 from scipy import signal
 
@@ -317,3 +318,26 @@ class ARMA_Generate:
         ry_2 = np.concatenate((np.reshape(ry[::-1], len(ry)), ry[1:]))
         return ry_2
 
+
+def whiteness_test(e, lags, dof):
+    re = ACF_parameter(e, lags, two_sided=False)
+    Q = len(e) * np.sum((re[1:]) ** 2)
+    alpha = 0.01
+    chi_crit = chi2.ppf(1 - alpha, dof)
+    print(f'Chi\u00b2 test Q value of residual is {Q}.')
+    print(f'Critical value under alpha={alpha * 100}% is {chi_crit}')
+    print(f'It is {Q < chi_crit} that the residual is white noise.')
+
+
+def ACF_PACF_Plot(series, lags, series_name=None):
+    fig, axs = plt.subplots(2, 1)
+    sm.graphics.tsa.plot_acf(series, lags, ax=axs[0])
+    sm.graphics.tsa.plot_pacf(series, lags, ax=axs[1])
+    if series_name is None:
+        axs[0].set(title=f'ACF Plot of {series_name}')
+        axs[1].set(title=f'PACF Plot of {series_name}')
+    else:
+        axs[0].set(title='ACF Plot')
+        axs[1].set(title='PACF Plot')
+    fig.tight_layout()
+    fig.show()
