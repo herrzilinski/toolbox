@@ -399,7 +399,7 @@ class ARMA_Estimate:
 
         if debug_info:
             print(f'Estimation finished in {len(self.SSE_collect)} iterations in {time.time() - start_time} seconds')
-            print(self.SSE_collect)
+            print(f'SSE of each iteration are: \n{self.SSE_collect}')
 
         return self.theta_hat
 
@@ -423,10 +423,24 @@ class ARMA_Estimate:
         plt.show()
 
     def confidence_interval(self):
-        for i in range(len(self.theta_hat)):
+        for i in range(self.na):
             upper = self.theta_hat[i] + 2 * np.sqrt(self.cov_theta[i, i])
             lower = self.theta_hat[i] - 2 * np.sqrt(self.cov_theta[i, i])
-            print(f'The C.I. of parameter{i + 1} is {lower:.5f} to {upper:.5f}')
+            print(f'The C.I. of AR parameter{i + 1} is {lower:.5f} to {upper:.5f}')
+            if upper * lower < 0:
+                print('This parameter might not be statistically significant.')
+        for j in range(self.na, len(self.theta_hat)):
+            upper = self.theta_hat[j] + 2 * np.sqrt(self.cov_theta[j, j])
+            lower = self.theta_hat[j] - 2 * np.sqrt(self.cov_theta[j, j])
+            print(f'The C.I. of MA parameter{j - self.na + 1} is {lower:.5f} to {upper:.5f}')
+            if upper * lower < 0:
+                print('This parameter might not be statistically significant.')
+
+    def zero_poles(self):
+        zero = np.roots(np.r_[1, self.theta_hat[:self.na]])
+        pole = np.roots(np.r_[1, self.theta_hat[self.na:]])
+        print(f'Roots for Zeros are {zero}.')
+        print(f'Roots for Poles are {pole}.')
 
     def residual_whiteness(self, lags, alpha=0.01):
         DOF = lags - self.na - self.nb
