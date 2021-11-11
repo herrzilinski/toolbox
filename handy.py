@@ -449,14 +449,14 @@ def whiteness_test(e, lags, dof):
 
 
 def ACF_PACF_Plot(series, lags, series_name=None):
-    fig, axs = plt.subplots(2, 1)
-    sm.graphics.tsa.plot_acf(series, lags, ax=axs[0])
-    sm.graphics.tsa.plot_pacf(series, lags, ax=axs[1])
+    fig = plt.figure()
+    plt.subplots(211)
+    sm.graphics.tsa.plot_acf(series, lags, ax=plt.gca())
+    plt.subplots(212)
+    sm.graphics.tsa.plot_pacf(series, lags, ax=plt.gca())
     if series_name is not None:
-        axs[0].set(title=f'ACF Plot of {series_name}')
-        axs[1].set(title=f'PACF Plot of {series_name}')
+        fig.suptitle(f'ACF/PACF Plot of {series_name}')
     else:
-        axs[0].set(title='ACF Plot')
-        axs[1].set(title='PACF Plot')
+        fig.suptitle(f'ACF/PACF Plot')
     fig.tight_layout()
     fig.show()
