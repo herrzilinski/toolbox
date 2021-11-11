@@ -6,6 +6,7 @@ import statsmodels.api as sm
 from scipy.stats import chi2
 from statsmodels.tsa.stattools import adfuller, kpss
 from scipy import signal
+import time
 
 
 def Rolling_Mean_Var(data, dataname=None):
@@ -317,6 +318,124 @@ class ARMA_Generate:
     def two_sided(self, ry):
         ry_2 = np.concatenate((np.reshape(ry[::-1], len(ry)), ry[1:]))
         return ry_2
+
+
+class ARMA_Estimate:
+    def __init__(self, series, na, nb, maxiter=100, mu=0.01, max_mu=10000, d=10**(-6)):
+        self.series = series
+        self.na = na
+        self.nb = nb
+        self.maxiter = maxiter
+        self.mu = mu
+        self.max_mu = max_mu
+        self.d = d
+        self.y_hat = None
+        self.e_hat = None
+        self.theta_hat = None
+        self.cov_theta = None
+        self.var_e = None
+        self.SSE_collect = []
+
+    def e_sse_cal(self, series, theta, na, nb):
+        nom = np.r_[1, np.zeros(max(na, nb))]
+        den = np.r_[1, np.zeros(max(na, nb))]
+        nom[1:na + 1] = theta[:na]
+        den[1:nb + 1] = theta[na:]
+        system = (nom, den, 1)
+        _, e = signal.dlsim(system, series)
+        e = np.reshape(e, [len(e), ])
+        SSE = e @ e.T
+        return e, SSE
+
+    def parameters(self, debug_info=False):
+        if debug_info:
+            start_time = time.time()
+        n = self.na + self.nb
+        theta = np.zeros(n)
+
+        for j in range(self.maxiter):
+            if j == self.maxiter:
+                print('Could not complete before reaching maximum iterations')
+                break
+
+            else:
+                e, SSE = self.e_sse_cal(self.series, theta, self.na, self.nb)
+                X = []
+                for i in range(n):
+                    theta_d = theta.copy()
+                    theta_d[i] = theta_d[i] + self.d
+                    e_d, _ = self.e_sse_cal(self.series, theta_d, self.na, self.nb)
+                    x = (e - e_d) / self.d
+                    X.append(x)
+                X = np.matrix(X).T
+                A = X.T @ X
+                g = (X.T @ e).T
+                delta_theta = np.linalg.inv(A + self.mu * np.identity(n)) @ g
+                delta_theta = delta_theta.A1
+                new_theta = delta_theta + theta
+                new_e, new_SSE = self.e_sse_cal(self.series, new_theta, self.na, self.nb)
+
+                if j == 0:
+                    self.SSE_collect.append(SSE)
+                else:
+                    self.SSE_collect.append(new_SSE)
+
+                if new_SSE < SSE:
+                    if max(delta_theta) < self.d * 100:
+                        self.e_hat = new_e
+                        self.y_hat = self.series - self.e_hat
+                        self.theta_hat = new_theta
+                        self.var_e = new_SSE / (len(e) - n)
+                        self.cov_theta = self.var_e * np.linalg.inv(A)
+                        break
+                    else:
+                        theta = new_theta
+                        self.mu = self.mu / 10
+                else:
+                    self.mu = self.mu * 10
+                    if self.mu > self.max_mu:
+                        print('Could not complete before reaching maximum mu')
+                        break
+
+        if debug_info:
+            print(f'Estimation finished in {len(self.SSE_collect)} iterations in {time.time() - start_time} seconds')
+            print(self.SSE_collect)
+
+        return self.theta_hat
+
+    def plot_prediction(self):
+        fig, ax = plt.subplots()
+        ax.plot(self.series, label='Training Data')
+        ax.plot(self.y_hat, label='Predictions')
+        fig.suptitle('One Step Ahead Predictions')
+        ax.set(xlabel='# of samples', ylabel='value')
+        ax.legend()
+        fig.show()
+
+    def plot_SSE(self):
+        plt.plot(np.arange(1, len(self.SSE_collect) + 1, 1), self.SSE_collect)
+        plt.title('SSE Curve')
+        plt.xlabel('# of iterations')
+        plt.xticks(np.arange(1, len(self.SSE_collect) + 1, 1))
+        plt.ylabel('SSE')
+        plt.grid()
+        plt.tight_layout()
+        plt.show()
+
+    def confidence_interval(self):
+        for i in range(len(self.theta_hat)):
+            upper = self.theta_hat[i] + 2 * np.sqrt(self.cov_theta[i, i])
+            lower = self.theta_hat[i] - 2 * np.sqrt(self.cov_theta[i, i])
+            print(f'The C.I. of parameter{i + 1} is {lower:.5f} to {upper:.5f}')
+
+    def residual_whiteness(self, lags, alpha=0.01):
+        DOF = lags - self.na - self.nb
+        re = ACF_parameter(self.e_hat, lags, two_sided=False)
+        Q = len(self.e_hat) * np.sum((re[1:]) ** 2)
+        chi_crit = chi2.ppf(1 - alpha, DOF)
+        print(f'Chi\u00b2 test Q value of residual is {Q}.')
+        print(f'Critical value under alpha={alpha*100}% is {chi_crit}')
+        print(f'It is {Q<chi_crit} that the residual is white noise.')
 
 
 def whiteness_test(e, lags, dof):
