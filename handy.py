@@ -100,7 +100,7 @@ def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNA=False):
     return ax
 
 
-def GPAC_cal(series, lags, Lj, Lk, cmap='RdBu', ry_2=None):
+def GPAC_cal(series, lags, Lj, Lk, series_name=None, cmap='RdBu', ry_2=None):
     if ry_2 is not None:
         if not np.array_equal(ry_2, ry_2[::-1]):
             ry_2 = np.concatenate((np.reshape(ry_2[::-1], len(ry_2)), ry_2[1:]))
@@ -142,7 +142,10 @@ def GPAC_cal(series, lags, Lj, Lk, cmap='RdBu', ry_2=None):
     table.columns = [str(x) for x in range(1, Lk + 1)]
 
     sns.heatmap(table, annot=True, vmin=-1, vmax=1, cmap=cmap)
-    plt.title(f'Generalized Partial AutoCorrelation Table')
+    if series_name is None:
+        plt.title(f'Generalized Partial AutoCorrelation Table')
+    else:
+        plt.title(f'GPAC Table of {series_name}')
     plt.tight_layout()
     plt.show()
 
