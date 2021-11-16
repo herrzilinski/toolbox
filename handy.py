@@ -406,18 +406,25 @@ class ARMA_Estimate:
 
         return self.theta_hat
 
+    def result(self):
+        for i in range(self.na):
+            print(f'The estimated AR parameter {i+1} is {self.theta_hat[i]}')
+        for j in range(self.na, len(self.theta_hat)):
+            print(f'The estimated MA parameter {j-self.na+1} is {self.theta_hat[j]}')
+
     def plot_prediction(self):
         fig, ax = plt.subplots()
         ax.plot(self.series, label='Training Data')
         ax.plot(self.y_hat, label='Predictions')
-        fig.suptitle('One Step Ahead Predictions')
+        fig.suptitle(f'One Step Ahead Predictions of ARMA({self.na},{self.nb}) model')
         ax.set(xlabel='# of samples', ylabel='value')
         ax.legend()
+        fig.tight_layout()
         fig.show()
 
     def plot_SSE(self):
         plt.plot(np.arange(1, len(self.SSE_collect) + 1, 1), self.SSE_collect)
-        plt.title('SSE Curve')
+        plt.title(f'SSE Curve of ARMA({self.na},{self.nb}) Estimation')
         plt.xlabel('# of iterations')
         plt.xticks(np.arange(1, len(self.SSE_collect) + 1, 1))
         plt.ylabel('SSE')
@@ -429,13 +436,13 @@ class ARMA_Estimate:
         for i in range(self.na):
             upper = self.theta_hat[i] + 2 * np.sqrt(self.cov_theta[i, i])
             lower = self.theta_hat[i] - 2 * np.sqrt(self.cov_theta[i, i])
-            print(f'The C.I. of AR parameter{i + 1} is {lower:.5f} to {upper:.5f}')
+            print(f'The C.I. of AR parameter {i + 1} is {lower:.5f} to {upper:.5f}')
             if upper * lower < 0:
                 print('This parameter might not be statistically significant.')
         for j in range(self.na, len(self.theta_hat)):
             upper = self.theta_hat[j] + 2 * np.sqrt(self.cov_theta[j, j])
             lower = self.theta_hat[j] - 2 * np.sqrt(self.cov_theta[j, j])
-            print(f'The C.I. of MA parameter{j - self.na + 1} is {lower:.5f} to {upper:.5f}')
+            print(f'The C.I. of MA parameter {j - self.na + 1} is {lower:.5f} to {upper:.5f}')
             if upper * lower < 0:
                 print('This parameter might not be statistically significant.')
 
@@ -475,3 +482,15 @@ def ACF_PACF_Plot(series, lags, series_name=None):
         sm.graphics.tsa.plot_pacf(series, lags=lags, ax=axs[1])
     fig.tight_layout()
     fig.show()
+
+
+def differencing(series, season=1, order=1):
+    if order > 1:
+        temp = differencing(series, season, 1)
+        return differencing(temp, season, order-1)
+    else:
+        res = []
+        for i in range(season, len(series)):
+            res.append(series[i] - series[i-season])
+        return np.array(res)
+
