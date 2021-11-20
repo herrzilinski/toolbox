@@ -334,6 +334,137 @@ class ARMA_Generate:
         return ry_2
 
 
+# class SARIMA_Generate:
+#     def __init__(self, order=None, mean_e=None, var_e=None, size=None, lead=20, season=1):
+#         self.mean_e = mean_e
+#         self.var_e = var_e
+#         self.size = size
+#         self.order = order
+#         self.season = season
+#         self.lead = lead
+#
+#     def samples(self):
+#         if self.size is None:
+#             self.size = int(input('Enter the number of data samples:'))
+#         if self.mean_e is None:
+#             self.mean_e = float(input('Enter the mean of white noise:'))
+#         if self.var_e is None:
+#             self.var_e = float(input('Enter the variance of white noise:'))
+#         if self.order is None:
+#             ar = [float(x) for x in input('Enter the coefficients of AR:\n'
+#                                           'e.g. 0.5, 0.2').split(',')]
+#             diff = int(input('Enter the order of integration, must be 0 or positive integer:'))
+#             ma = [float(x) for x in input('Enter the coefficients of MA:\n'
+#                                           'e.g. 0.5, -0.4').split(',')]
+#             self.order = (ar, diff, ma)
+#         ar = self.order[0]
+#         diff = self.order[1]
+#         ma = self.order[2]
+#
+#         e = np.random.normal(self.mean_e, np.sqrt(self.var_e), self.size+self.lead)
+#         p = len(ar)
+#         q = len(ma)
+#         nom = np.r_[1, np.zeros(max(p, q) * self.season)]
+#         den = np.r_[1, np.zeros(max(p, q) * self.season)]
+#         for i in range(q):
+#             nom[self.season * (i + 1)] = ma[i]
+#         for j in range(p):
+#             den[self.season * (j + 1)] = ar[j]
+#         system = (nom, den, 1)
+#
+#         _, y = signal.dlsim(system, e)
+#
+#         if diff != 0:
+#             y_arma = y[-self.size:]
+#             temp = np.zeros((self.size + self.season * diff, 1))
+#             for i in range(diff):
+#                 for j in range(self.size):
+#                     temp[j + self.season] = y_arma[j] + temp[j]
+#                 y_arma = temp[self.season:]
+#             y[-self.size:] = temp[self.season * diff:]
+#
+#         return y[-self.size:]
+
+
+class SARIMA_Generate:
+    def __init__(self, order=None, mean_e=None, var_e=None, size=None):
+        self.mean_e = mean_e
+        self.var_e = var_e
+        self.size = size
+        self.order = order
+
+    def samples(self):
+        if self.size is None:
+            self.size = int(input('Enter the number of data samples:'))
+        if self.mean_e is None:
+            self.mean_e = float(input('Enter the mean of white noise:'))
+        if self.var_e is None:
+            self.var_e = float(input('Enter the variance of white noise:'))
+        if self.order is None:
+            ar = [float(x) for x in input('Enter the coefficients of AR:\n'
+                                          'e.g. 0.5, 0.2').split(',')]
+            diff = int(input('Enter the order of integration, must be 0 or positive integer:'))
+            ma = [float(x) for x in input('Enter the coefficients of MA:\n'
+                                          'e.g. 0.5, -0.4').split(',')]
+            self.order = [ar, diff, ma]
+
+        e = np.random.normal(self.mean_e, np.sqrt(self.var_e), self.size)
+
+        polyar = 1
+        polyma = 1
+        polydf = 1
+        for i in self.order:
+            if len(i) == 3:
+                i.append(1)
+            ar = i[0]
+            diff = i[1]
+            ma = i[2]
+            s = i[3]
+            p = len(ar)
+            q = len(ma)
+            param_ma = np.r_[1, np.zeros(q * s)]
+            param_ar = np.r_[1, np.zeros(p * s)]
+            param_df = np.r_[1, np.zeros(s - 1), -1]
+            for j in range(q):
+                param_ma[s * (j + 1)] = ma[j]
+            for k in range(p):
+                param_ar[s * (k + 1)] = ar[k]
+            param_ma = np.poly1d(param_ma)
+            param_ar = np.poly1d(param_ar)
+            param_df = np.poly1d(param_df) ** diff
+
+            polyma = param_ma * polyma
+            polyar = param_ar * polyar
+            polydf = param_df * polydf
+
+        nom = polyma.coeffs.tolist()
+        den = (polyar * polydf).coeffs.tolist()
+
+        for i in range(len(den) - 1, -1, -1):
+            if den[i] == 0:
+                den.pop()
+            else:
+                break
+
+        for i in range(len(nom) - 1, -1, -1):
+            if nom[i] == 0:
+                nom.pop()
+            else:
+                break
+
+        if len(den) != len(nom):
+            if len(den) < len(nom):
+                den = np.r_[den, np.zeros(len(nom) - len(den))]
+            else:
+                nom = np.r_[nom, np.zeros(len(den) - len(nom))]
+
+        system = (nom, den, 1)
+        _, y = signal.dlsim(system, e)
+
+        return y
+
+
+
 class ARMA_Estimate:
     def __init__(self, series, na, nb, maxiter=100, mu=0.01, max_mu=10000, d=10**(-6)):
         self.series = series
