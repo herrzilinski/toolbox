@@ -27,6 +27,7 @@ def Rolling_Mean_Var(data, dataname=None):
     axs[1].set(ylabel='Variance')
     axs[1].grid()
     plt.xlabel('# of Samples')
+    fig.tight_layout()
     fig.show()
 
 
