@@ -467,10 +467,11 @@ class SARIMA_Generate:
 
 
 class ARMA_Estimate:
-    def __init__(self, series, na, nb, maxiter=100, mu=0.01, max_mu=10000, d=10**(-6)):
+    def __init__(self, series, na, nb, season=1, maxiter=100, mu=0.01, max_mu=10000, d=10**(-6)):
         self.series = series
         self.na = na
         self.nb = nb
+        self.season = season
         self.maxiter = maxiter
         self.mu = mu
         self.max_mu = max_mu
@@ -482,11 +483,13 @@ class ARMA_Estimate:
         self.var_e = None
         self.SSE_collect = []
 
-    def e_sse_cal(self, series, theta, na, nb):
-        nom = np.r_[1, np.zeros(max(na, nb))]
-        den = np.r_[1, np.zeros(max(na, nb))]
-        nom[1:na + 1] = theta[:na]
-        den[1:nb + 1] = theta[na:]
+    def e_sse_cal(self, series, theta, na, nb, season):
+        nom = np.r_[1, np.zeros(max(na, nb)*season)]
+        den = np.r_[1, np.zeros(max(na, nb)*season)]
+        for p in range(1, na+1):
+            nom[p*season] = theta[p-1]
+        for q in range(1, nb+1):
+            den[q*season] = theta[na+q-1]
         system = (nom, den, 1)
         _, e = signal.dlsim(system, series)
         e = np.reshape(e, [len(e), ])
@@ -505,12 +508,12 @@ class ARMA_Estimate:
                 break
 
             else:
-                e, SSE = self.e_sse_cal(self.series, theta, self.na, self.nb)
+                e, SSE = self.e_sse_cal(self.series, theta, self.na, self.nb, self.season)
                 X = []
                 for i in range(n):
                     theta_d = theta.copy()
                     theta_d[i] = theta_d[i] + self.d
-                    e_d, _ = self.e_sse_cal(self.series, theta_d, self.na, self.nb)
+                    e_d, _ = self.e_sse_cal(self.series, theta_d, self.na, self.nb, self.season)
                     x = (e - e_d) / self.d
                     X.append(x)
                 X = np.matrix(X).T
@@ -519,7 +522,7 @@ class ARMA_Estimate:
                 delta_theta = np.linalg.inv(A + self.mu * np.identity(n)) @ g
                 delta_theta = delta_theta.A1
                 new_theta = delta_theta + theta
-                new_e, new_SSE = self.e_sse_cal(self.series, new_theta, self.na, self.nb)
+                new_e, new_SSE = self.e_sse_cal(self.series, new_theta, self.na, self.nb, self.season)
 
                 if j == 0:
                     self.SSE_collect.append(SSE)
