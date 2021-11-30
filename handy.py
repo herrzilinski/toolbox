@@ -530,7 +530,7 @@ class ARMA_Estimate:
                     self.SSE_collect.append(new_SSE)
 
                 if new_SSE < SSE:
-                    if max(delta_theta) < self.d * 100:
+                    if np.linalg.norm(delta_theta) < self.d * 100:
                         self.resid = new_e
                         self.y_hat = self.series - self.resid
                         self.theta_hat = new_theta
