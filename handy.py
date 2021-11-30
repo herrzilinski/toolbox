@@ -477,7 +477,7 @@ class ARMA_Estimate:
         self.max_mu = max_mu
         self.d = d
         self.y_hat = None
-        self.e_hat = None
+        self.resid = None
         self.theta_hat = None
         self.cov_theta = None
         self.var_e = None
@@ -531,8 +531,8 @@ class ARMA_Estimate:
 
                 if new_SSE < SSE:
                     if max(delta_theta) < self.d * 100:
-                        self.e_hat = new_e
-                        self.y_hat = self.series - self.e_hat
+                        self.resid = new_e
+                        self.y_hat = self.series - self.resid
                         self.theta_hat = new_theta
                         self.var_e = new_SSE / (len(e) - n)
                         self.cov_theta = self.var_e * np.linalg.inv(A)
@@ -554,9 +554,9 @@ class ARMA_Estimate:
 
     def result(self):
         for i in range(self.na):
-            print(f'The estimated AR parameter {i+1} is {self.theta_hat[i]}')
+            print(f'The estimated AR parameter {(i+1)*self.season} is {self.theta_hat[i]}')
         for j in range(self.na, len(self.theta_hat)):
-            print(f'The estimated MA parameter {j-self.na+1} is {self.theta_hat[j]}')
+            print(f'The estimated MA parameter {(j-self.na+1)*self.season} is {self.theta_hat[j]}')
 
     def plot_prediction(self):
         fig, ax = plt.subplots()
@@ -600,8 +600,8 @@ class ARMA_Estimate:
 
     def residual_whiteness(self, lags, alpha=0.01):
         DOF = lags - self.na - self.nb
-        re = ACF_parameter(self.e_hat, lags, two_sided=False)
-        Q = len(self.e_hat) * np.sum((re[1:]) ** 2)
+        re = ACF_parameter(self.resid, lags, two_sided=False)
+        Q = len(self.resid) * np.sum((re[1:]) ** 2)
         chi_crit = chi2.ppf(1 - alpha, DOF)
         print(f'Chi\u00b2 test Q value of residual is {Q}.')
         print(f'Critical value under alpha={alpha*100}% is {chi_crit}')
