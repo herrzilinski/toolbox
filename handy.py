@@ -496,68 +496,72 @@ class ARMA_Estimate:
         return e, SSE
 
     def parameters(self, debug_info=False):
-        if debug_info:
-            start_time = time.time()
-        n = self.na + self.nb
-        theta = np.zeros(n)
+        if (self.na == 0 and self.nb == 0) or (self.na is None and self.nb is None):
+            self.resid = self.series
+            self.y_hat = self.series - self.resid
+        else:
+            if debug_info:
+                start_time = time.time()
+            n = self.na + self.nb
+            theta = np.zeros(n)
 
-        for j in range(self.maxiter):
-            if j == self.maxiter - 1:
-                print('Could not complete before reaching maximum iterations')
-                self.resid = new_e
-                self.y_hat = self.series - self.resid
-                self.theta_hat = new_theta
-                self.var_e = new_SSE / (len(e) - n)
-                self.cov_theta = self.var_e * np.linalg.inv(A)
-                break
+            for j in range(self.maxiter):
+                if j == self.maxiter - 1:
+                    print('Could not complete before reaching maximum iterations')
+                    self.resid = new_e
+                    self.y_hat = self.series - self.resid
+                    self.theta_hat = new_theta
+                    self.var_e = new_SSE / (len(e) - n)
+                    self.cov_theta = self.var_e * np.linalg.inv(A)
+                    break
 
-            else:
-                e, SSE = self.e_sse_cal(self.series, theta, self.na, self.nb, self.season)
-                X = []
-                for i in range(n):
-                    theta_d = theta.copy()
-                    theta_d[i] = theta_d[i] + self.d
-                    e_d, _ = self.e_sse_cal(self.series, theta_d, self.na, self.nb, self.season)
-                    x = (e - e_d) / self.d
-                    X.append(x)
-                X = np.matrix(X).T
-                A = X.T @ X
-                g = (X.T @ e).T
-                delta_theta = np.linalg.inv(A + self.mu * np.identity(n)) @ g
-                delta_theta = delta_theta.A1
-                new_theta = delta_theta + theta
-                new_e, new_SSE = self.e_sse_cal(self.series, new_theta, self.na, self.nb, self.season)
-
-                if j == 0:
-                    self.SSE_collect.append(SSE)
                 else:
-                    self.SSE_collect.append(new_SSE)
+                    e, SSE = self.e_sse_cal(self.series, theta, self.na, self.nb, self.season)
+                    X = []
+                    for i in range(n):
+                        theta_d = theta.copy()
+                        theta_d[i] = theta_d[i] + self.d
+                        e_d, _ = self.e_sse_cal(self.series, theta_d, self.na, self.nb, self.season)
+                        x = (e - e_d) / self.d
+                        X.append(x)
+                    X = np.matrix(X).T
+                    A = X.T @ X
+                    g = (X.T @ e).T
+                    delta_theta = np.linalg.inv(A + self.mu * np.identity(n)) @ g
+                    delta_theta = delta_theta.A1
+                    new_theta = delta_theta + theta
+                    new_e, new_SSE = self.e_sse_cal(self.series, new_theta, self.na, self.nb, self.season)
 
-                if new_SSE < SSE:
-                    if np.linalg.norm(delta_theta) < self.d * 100:
-                        self.resid = new_e
-                        self.y_hat = self.series - self.resid
-                        self.theta_hat = new_theta
-                        self.var_e = new_SSE / (len(e) - n)
-                        self.cov_theta = self.var_e * np.linalg.inv(A)
-                        break
+                    if j == 0:
+                        self.SSE_collect.append(SSE)
                     else:
-                        theta = new_theta
-                        self.mu = self.mu / 10
-                else:
-                    self.mu = self.mu * 10
-                    if self.mu > self.max_mu:
-                        print('Could not complete before reaching maximum mu')
-                        self.resid = new_e
-                        self.y_hat = self.series - self.resid
-                        self.theta_hat = new_theta
-                        self.var_e = new_SSE / (len(e) - n)
-                        self.cov_theta = self.var_e * np.linalg.inv(A)
-                        break
+                        self.SSE_collect.append(new_SSE)
 
-        if debug_info:
-            print(f'Estimation finished in {len(self.SSE_collect)} iterations in {time.time() - start_time} seconds')
-            print(f'SSE of each iteration are: \n{self.SSE_collect}')
+                    if new_SSE < SSE:
+                        if np.linalg.norm(delta_theta) < self.d * 100:
+                            self.resid = new_e
+                            self.y_hat = self.series - self.resid
+                            self.theta_hat = new_theta
+                            self.var_e = new_SSE / (len(e) - n)
+                            self.cov_theta = self.var_e * np.linalg.inv(A)
+                            break
+                        else:
+                            theta = new_theta
+                            self.mu = self.mu / 10
+                    else:
+                        self.mu = self.mu * 10
+                        if self.mu > self.max_mu:
+                            print('Could not complete before reaching maximum mu')
+                            self.resid = new_e
+                            self.y_hat = self.series - self.resid
+                            self.theta_hat = new_theta
+                            self.var_e = new_SSE / (len(e) - n)
+                            self.cov_theta = self.var_e * np.linalg.inv(A)
+                            break
+
+            if debug_info:
+                print(f'Estimation finished in {len(self.SSE_collect)} iterations in {time.time() - start_time} seconds')
+                print(f'SSE of each iteration are: \n{self.SSE_collect}')
 
         return self.theta_hat
 
@@ -615,6 +619,63 @@ class ARMA_Estimate:
         print(f'Chi\u00b2 test Q value of residual is {Q}.')
         print(f'Critical value under alpha={alpha * 100}% is {chi_crit}')
         print(f'It is {Q < chi_crit} that the residual is white noise.')
+
+
+def SARIMA_fit(series, order):
+    polyar = 1
+    polyma = 1
+    polydf = 1
+    for i in order:
+        if len(i) == 3:
+            i.append(1)
+        ar = i[0]
+        diff = i[1]
+        ma = i[2]
+        s = i[3]
+        p = len(ar)
+        q = len(ma)
+        param_ma = np.r_[1, np.zeros(q * s)]
+        param_ar = np.r_[1, np.zeros(p * s)]
+        param_df = np.r_[1, np.zeros(s - 1), -1]
+        for j in range(q):
+            param_ma[s * (j + 1)] = ma[j]
+        for k in range(p):
+            param_ar[s * (k + 1)] = ar[k]
+        param_ma = np.poly1d(param_ma)
+        param_ar = np.poly1d(param_ar)
+        param_df = np.poly1d(param_df) ** diff
+
+        polyma = param_ma * polyma
+        polyar = param_ar * polyar
+        polydf = param_df * polydf
+
+    nom = (polyar * polydf).coeffs.tolist()
+    den = polyma.coeffs.tolist()
+
+    for i in range(len(den) - 1, -1, -1):
+        if den[i] == 0:
+            den.pop()
+        else:
+            break
+
+    for i in range(len(nom) - 1, -1, -1):
+        if nom[i] == 0:
+            nom.pop()
+        else:
+            break
+
+    if len(den) != len(nom):
+        if len(den) < len(nom):
+            den = np.r_[den, np.zeros(len(nom) - len(den))]
+        else:
+            nom = np.r_[nom, np.zeros(len(den) - len(nom))]
+
+    system = (nom, den, 1)
+    _, resid = signal.dlsim(system, series)
+    fittedvalues = series - resid
+
+    return fittedvalues, resid
+
 
 
 def whiteness_test(e, lags, dof):
