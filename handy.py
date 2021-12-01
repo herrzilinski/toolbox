@@ -628,9 +628,9 @@ def SARIMA_fit(series, order):
     for i in order:
         if len(i) == 3:
             i.append(1)
-        ar = i[0]
+        ar = i[0] if len(i[0]) > 0 else [0]
         diff = i[1]
-        ma = i[2]
+        ma = i[2] if len(i[2]) > 0 else [0]
         s = i[3]
         p = len(ar)
         q = len(ma)
@@ -677,7 +677,6 @@ def SARIMA_fit(series, order):
     fittedvalues = series - resid
 
     return fittedvalues, resid
-
 
 
 def whiteness_test(e, lags, dof):
