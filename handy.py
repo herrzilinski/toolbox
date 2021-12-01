@@ -672,6 +672,8 @@ def SARIMA_fit(series, order):
 
     system = (nom, den, 1)
     _, resid = signal.dlsim(system, series)
+
+    resid = np.reshape(resid, [len(resid), ])
     fittedvalues = series - resid
 
     return fittedvalues, resid
