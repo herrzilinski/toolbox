@@ -465,9 +465,8 @@ class SARIMA_Generate:
         return y
 
 
-
 class ARMA_Estimate:
-    def __init__(self, series, na, nb, season=1, maxiter=100, mu=0.01, max_mu=10000, d=10**(-6)):
+    def __init__(self, series, na, nb, season=1, maxiter=100, mu=0.01, max_mu=10000, d=10 ** (-6)):
         self.series = series
         self.na = na
         self.nb = nb
@@ -484,12 +483,12 @@ class ARMA_Estimate:
         self.SSE_collect = []
 
     def e_sse_cal(self, series, theta, na, nb, season):
-        nom = np.r_[1, np.zeros(max(na, nb)*season)]
-        den = np.r_[1, np.zeros(max(na, nb)*season)]
-        for p in range(1, na+1):
-            nom[p*season] = theta[p-1]
-        for q in range(1, nb+1):
-            den[q*season] = theta[na+q-1]
+        nom = np.r_[1, np.zeros(max(na, nb) * season)]
+        den = np.r_[1, np.zeros(max(na, nb) * season)]
+        for p in range(1, na + 1):
+            nom[p * season] = theta[p - 1]
+        for q in range(1, nb + 1):
+            den[q * season] = theta[na + q - 1]
         system = (nom, den, 1)
         _, e = signal.dlsim(system, series)
         e = np.reshape(e, [len(e), ])
@@ -503,8 +502,13 @@ class ARMA_Estimate:
         theta = np.zeros(n)
 
         for j in range(self.maxiter):
-            if j == self.maxiter:
+            if j == self.maxiter - 1:
                 print('Could not complete before reaching maximum iterations')
+                self.resid = new_e
+                self.y_hat = self.series - self.resid
+                self.theta_hat = new_theta
+                self.var_e = new_SSE / (len(e) - n)
+                self.cov_theta = self.var_e * np.linalg.inv(A)
                 break
 
             else:
@@ -544,6 +548,11 @@ class ARMA_Estimate:
                     self.mu = self.mu * 10
                     if self.mu > self.max_mu:
                         print('Could not complete before reaching maximum mu')
+                        self.resid = new_e
+                        self.y_hat = self.series - self.resid
+                        self.theta_hat = new_theta
+                        self.var_e = new_SSE / (len(e) - n)
+                        self.cov_theta = self.var_e * np.linalg.inv(A)
                         break
 
         if debug_info:
@@ -554,9 +563,9 @@ class ARMA_Estimate:
 
     def result(self):
         for i in range(self.na):
-            print(f'The estimated AR parameter {(i+1)*self.season} is {self.theta_hat[i]}')
+            print(f'The estimated AR parameter {(i + 1) * self.season} is {self.theta_hat[i]}')
         for j in range(self.na, len(self.theta_hat)):
-            print(f'The estimated MA parameter {(j-self.na+1)*self.season} is {self.theta_hat[j]}')
+            print(f'The estimated MA parameter {(j - self.na + 1) * self.season} is {self.theta_hat[j]}')
 
     def plot_prediction(self):
         fig, ax = plt.subplots()
@@ -604,8 +613,8 @@ class ARMA_Estimate:
         Q = len(self.resid) * np.sum((re[1:]) ** 2)
         chi_crit = chi2.ppf(1 - alpha, DOF)
         print(f'Chi\u00b2 test Q value of residual is {Q}.')
-        print(f'Critical value under alpha={alpha*100}% is {chi_crit}')
-        print(f'It is {Q<chi_crit} that the residual is white noise.')
+        print(f'Critical value under alpha={alpha * 100}% is {chi_crit}')
+        print(f'It is {Q < chi_crit} that the residual is white noise.')
 
 
 def whiteness_test(e, lags, dof):
