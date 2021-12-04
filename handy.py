@@ -679,6 +679,251 @@ def SARIMA_fit(series, order):
     return fittedvalues, resid
 
 
+class SARIMA_Estimate:
+    def __init__(self, series, order, maxiter=100, mu=0.01, max_mu=10000, d=10 ** (-6)):
+        self.series = series
+        self.order = order
+        self.maxiter = maxiter
+        self.mu = mu
+        self.max_mu = max_mu
+        self.d = d
+        self.y_hat = None
+        self.resid = None
+        self.theta_hat = None
+        self.cov_theta = None
+        self.var_e = None
+        self.SSE_collect = []
+
+        self.n = 0
+        for r in self.order:
+            self.n += r[0] + r[2]
+        self.zero = None
+        self.pole = None
+
+    def e_sse_cal(self, series, theta):
+        polyar = 1
+        polyma = 1
+        polydf = 1
+        theta_temp = theta.copy()
+        for odr in self.order:
+            if len(odr) == 3:
+                odr.append(1)
+
+            na = odr[0]
+            diff = odr[1]
+            nb = odr[2]
+            s = odr[3]
+
+            ar = theta_temp[:na]
+            theta_temp = theta_temp[na:]
+            ma = theta_temp[:nb]
+            theta_temp = theta_temp[nb:]
+
+            param_ma = np.r_[1, np.zeros(nb * s)]
+            param_ar = np.r_[1, np.zeros(na * s)]
+            param_df = np.r_[1, np.zeros(s - 1), -1]
+            for j in range(nb):
+                param_ma[s * (j + 1)] = ma[j]
+            for k in range(na):
+                param_ar[s * (k + 1)] = ar[k]
+            param_ma = np.poly1d(param_ma)
+            param_ar = np.poly1d(param_ar)
+            param_df = np.poly1d(param_df) ** diff
+
+            polyma = param_ma * polyma
+            polyar = param_ar * polyar
+            polydf = param_df * polydf
+
+        nom = (polyar * polydf).coeffs.tolist()
+        den = polyma.coeffs.tolist()
+
+        for i in range(len(den) - 1, -1, -1):
+            if den[i] == 0:
+                den.pop()
+            else:
+                break
+
+        for i in range(len(nom) - 1, -1, -1):
+            if nom[i] == 0:
+                nom.pop()
+            else:
+                break
+
+        if len(den) != len(nom):
+            if len(den) < len(nom):
+                den = np.r_[den, np.zeros(len(nom) - len(den))]
+            else:
+                nom = np.r_[nom, np.zeros(len(den) - len(nom))]
+
+        system = (nom, den, 1)
+        _, e = signal.dlsim(system, series)
+        e = np.reshape(e, [len(e), ])
+        SSE = e @ e.T
+        return e, SSE, system
+
+    def parameters(self, debug_info=False):
+        if sum(sum(self.order, [])) == 0:
+            self.resid = self.series
+            self.y_hat = self.series - self.resid
+        else:
+            if debug_info:
+                start_time = time.time()
+            theta = np.zeros(self.n)
+
+            for j in range(self.maxiter):
+                if j == self.maxiter - 1:
+                    print('Could not complete before reaching maximum iterations')
+                    self.resid = new_e
+                    self.y_hat = self.series - self.resid
+                    self.theta_hat = new_theta
+                    self.var_e = new_SSE / (len(e) - self.n)
+                    self.cov_theta = self.var_e * np.linalg.inv(A)
+                    self.zero = new_system[0]
+                    self.pole = new_system[1]
+                    break
+
+                else:
+                    e, SSE, _ = self.e_sse_cal(self.series, theta)
+                    X = []
+                    for i in range(self.n):
+                        theta_d = theta.copy()
+                        theta_d[i] = theta_d[i] + self.d
+                        e_d, _, _ = self.e_sse_cal(self.series, theta_d)
+                        x = (e - e_d) / self.d
+                        X.append(x)
+                    X = np.matrix(X).T
+                    A = X.T @ X
+                    g = (X.T @ e).T
+                    delta_theta = np.linalg.inv(A + self.mu * np.identity(self.n)) @ g
+                    delta_theta = delta_theta.A1
+                    new_theta = delta_theta + theta
+                    new_e, new_SSE, new_system = self.e_sse_cal(self.series, new_theta)
+
+                    if j == 0:
+                        self.SSE_collect.append(SSE)
+                    else:
+                        self.SSE_collect.append(new_SSE)
+
+                    if new_SSE < SSE:
+                        if np.linalg.norm(delta_theta) < self.d * 100:
+                            self.resid = new_e
+                            self.y_hat = self.series - self.resid
+                            self.theta_hat = new_theta
+                            self.var_e = new_SSE / (len(e) - self.n)
+                            self.cov_theta = self.var_e * np.linalg.inv(A)
+                            self.zero = new_system[0]
+                            self.pole = new_system[1]
+                            break
+                        else:
+                            theta = new_theta
+                            self.mu = self.mu / 10
+                    else:
+                        self.mu = self.mu * 10
+                        if self.mu > self.max_mu:
+                            print('Could not complete before reaching maximum mu')
+                            self.resid = new_e
+                            self.y_hat = self.series - self.resid
+                            self.theta_hat = new_theta
+                            self.var_e = new_SSE / (len(e) - self.n)
+                            self.cov_theta = self.var_e * np.linalg.inv(A)
+                            self.zero = new_system[0]
+                            self.pole = new_system[1]
+                            break
+
+            if debug_info:
+                print(f'Estimation finished in {len(self.SSE_collect)} iterations in {time.time() - start_time} seconds')
+                print(f'SSE of each iteration are: \n{self.SSE_collect}')
+
+        return self.theta_hat
+
+    def result(self):
+        res = self.theta_hat.copy()
+        for odr in self.order:
+            if len(odr) == 3:
+                odr.append(1)
+            na = odr[0]
+            nb = odr[2]
+            s = odr[3]
+            if s != 1:
+                for i in range(na):
+                    print(f'The estimated AR{i + 1}_L{s * (i + 1)} is {res[i]}')
+                res = res[na:]
+                for j in range(nb):
+                    print(f'The estimated MA{j + 1}_L{s * (j + 1)} is {res[j]}')
+                res = res[nb:]
+            else:
+                for i in range(na):
+                    print(f'The estimated AR{i + 1} is {res[i]}')
+                res = res[na:]
+                for j in range(nb):
+                    print(f'The estimated MA{j + 1} is {res[j]}')
+                res = res[nb:]
+
+    def plot_prediction(self):
+        fig, ax = plt.subplots()
+        ax.plot(self.series, label='Training Data')
+        ax.plot(self.y_hat, label='Predictions')
+        fig.suptitle(f'One Step Ahead Predictions')
+        ax.set(xlabel='# of samples', ylabel='value')
+        ax.legend()
+        fig.tight_layout()
+        fig.show()
+
+    def plot_SSE(self):
+        plt.plot(np.arange(1, len(self.SSE_collect) + 1, 1), self.SSE_collect)
+        plt.title(f'SSE Curve of Estimation Process')
+        plt.xlabel('# of iterations')
+        plt.xticks(np.arange(1, len(self.SSE_collect) + 1, 1))
+        plt.ylabel('SSE')
+        plt.grid()
+        plt.tight_layout()
+        plt.show()
+
+    def confidence_interval(self):
+        res = self.theta_hat.copy()
+        diag = np.diag(self.cov_theta)
+        for odr in self.order:
+            if len(odr) == 3:
+                odr.append(1)
+            na = odr[0]
+            nb = odr[2]
+            s = odr[3]
+            for i in range(na):
+                upper = res[i] + 2 * np.sqrt(diag[i])
+                lower = res[i] - 2 * np.sqrt(diag[i])
+                if s == 1:
+                    print(f'The C.I. of estimated AR{i + 1} is {lower:.5f} to {upper:.5f}')
+                else:
+                    print(f'The C.I. of estimated AR{i + 1}_L{s * (i + 1)} is {lower:.5f} to {upper:.5f}')
+                if upper * lower < 0:
+                    print('This parameter might not be statistically significant.')
+            res = res[na:]
+            for j in range(nb):
+                upper = res[j] + 2 * np.sqrt(diag[j])
+                lower = res[j] - 2 * np.sqrt(diag[j])
+                if s == 1:
+                    print(f'The C.I. of estimated MA{j + 1} is {lower:.5f} to {upper:.5f}')
+                else:
+                    print(f'The C.I. of estimated MA{j + 1}_L{s * (j + 1)} is {lower:.5f} to {upper:.5f}')
+                if upper * lower < 0:
+                    print('This parameter might not be statistically significant.')
+            res = res[nb:]
+
+    def zero_poles(self):
+        print(f'Roots for Zeros are {np.roots(self.zero)}.')
+        print(f'Roots for Poles are {np.roots(self.pole)}.')
+
+    def residual_whiteness(self, lags, alpha=0.01):
+        DOF = lags - self.n
+        re = ACF_parameter(self.resid, lags, two_sided=False)
+        Q = len(self.resid) * np.sum((re[1:]) ** 2)
+        chi_crit = chi2.ppf(1 - alpha, DOF)
+        print(f'Chi\u00b2 test Q value of residual is {Q}.')
+        print(f'Critical value under alpha={alpha * 100}% is {chi_crit}')
+        print(f'It is {Q < chi_crit} that the residual is white noise.')
+
+
+
 def whiteness_test(e, lags, dof):
     re = ACF_parameter(e, lags, two_sided=False)
     Q = len(e) * np.sum((re[1:]) ** 2)
