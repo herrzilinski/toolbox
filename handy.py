@@ -771,6 +771,8 @@ class SARIMA_Estimate:
             theta = np.zeros(self.n)
 
             for j in range(self.maxiter):
+                if debug_info:
+                    iter_start = time.time()
                 if j == self.maxiter - 1:
                     print('Could not complete before reaching maximum iterations')
                     self.resid = new_e
@@ -805,7 +807,7 @@ class SARIMA_Estimate:
                         self.SSE_collect.append(new_SSE)
 
                     if new_SSE < SSE:
-                        if np.linalg.norm(delta_theta) < self.d * 100:
+                        if np.linalg.norm(delta_theta) < self.d * 1000:
                             self.resid = new_e
                             self.y_hat = self.series - self.resid
                             self.theta_hat = new_theta
@@ -830,9 +832,13 @@ class SARIMA_Estimate:
                             self.pole = new_system[1]
                             break
 
+                if debug_info:
+                    iter_stop = time.time()
+                    duration = iter_stop - iter_start
+                    print(f'Iteration {j+1} finished in {duration:.5f} seconds, SSE: {self.SSE_collect[-1]:.5f}')
+
             if debug_info:
-                print(f'Estimation finished in {len(self.SSE_collect)} iterations in {time.time() - start_time} seconds')
-                print(f'SSE of each iteration are: \n{self.SSE_collect}')
+                print(f'Estimation finished in {len(self.SSE_collect)} iterations in {(time.time() - start_time):.5f} seconds')
 
         return self.theta_hat
 
