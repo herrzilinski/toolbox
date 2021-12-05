@@ -866,10 +866,10 @@ class SARIMA_Estimate:
                     print(f'The estimated MA{j + 1} is {res[j]}')
                 res = res[nb:]
 
-    def plot_prediction(self):
+    def plot_prediction(self, start=None, end=None):
         fig, ax = plt.subplots()
-        ax.plot(self.series, label='Training Data')
-        ax.plot(self.y_hat, label='Predictions')
+        ax.plot(self.series[start: end], label='Training Data')
+        ax.plot(self.y_hat[start: end], label='Predictions')
         fig.suptitle(f'One Step Ahead Predictions')
         ax.set(xlabel='# of samples', ylabel='value')
         ax.legend()
