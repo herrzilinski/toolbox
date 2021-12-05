@@ -461,6 +461,7 @@ class SARIMA_Generate:
 
         system = (nom, den, 1)
         _, y = signal.dlsim(system, e)
+        y = np.reshape(y, [len(y), ])
 
         return y
 
