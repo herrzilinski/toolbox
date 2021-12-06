@@ -896,6 +896,8 @@ class SARIMA_Estimate:
             sol = np.linalg.solve(fac, cons)
             self.y_hat[i] = sol
 
+        if type(self.series) == pd.Series:
+            self.y_hat = pd.Series(self.y_hat, index=self.series.index)
         return self.y_hat
 
     def forecast(self, steps):
