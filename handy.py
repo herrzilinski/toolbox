@@ -688,6 +688,8 @@ class SARIMA_Estimate:
         self.mu = mu
         self.max_mu = max_mu
         self.d = d
+        self.ir = None
+        self.ir_e = None
         self.y_hat = None
         self.resid = None
         self.theta_hat = None
@@ -776,13 +778,15 @@ class SARIMA_Estimate:
                     iter_start = time.time()
                 if j == self.maxiter - 1:
                     print('Could not complete before reaching maximum iterations')
-                    self.resid = new_e
-                    self.y_hat = self.series - self.resid
+                    self.ir_e = new_e
+                    self.ir = self.series - self.ir_e
+                    self.zero = new_system[0]
+                    self.pole = new_system[1]
+                    self.y_hat = self.get_predict()
+                    self.resid = self.series - self.y_hat
                     self.theta_hat = new_theta
                     self.var_e = new_SSE / (len(e) - self.n)
                     self.cov_theta = self.var_e * np.linalg.inv(A)
-                    self.zero = new_system[0]
-                    self.pole = new_system[1]
                     break
 
                 else:
@@ -809,13 +813,15 @@ class SARIMA_Estimate:
 
                     if new_SSE < SSE:
                         if np.linalg.norm(delta_theta) < self.d * 1000:
-                            self.resid = new_e
-                            self.y_hat = self.series - self.resid
+                            self.ir_e = new_e
+                            self.ir = self.series - self.ir_e
+                            self.zero = new_system[0]
+                            self.pole = new_system[1]
+                            self.y_hat = self.get_predict()
+                            self.resid = self.series - self.y_hat
                             self.theta_hat = new_theta
                             self.var_e = new_SSE / (len(e) - self.n)
                             self.cov_theta = self.var_e * np.linalg.inv(A)
-                            self.zero = new_system[0]
-                            self.pole = new_system[1]
                             break
                         else:
                             theta = new_theta
@@ -824,13 +830,15 @@ class SARIMA_Estimate:
                         self.mu = self.mu * 10
                         if self.mu > self.max_mu:
                             print('Could not complete before reaching maximum mu')
-                            self.resid = new_e
-                            self.y_hat = self.series - self.resid
+                            self.ir_e = new_e
+                            self.ir = self.series - self.ir_e
+                            self.zero = new_system[0]
+                            self.pole = new_system[1]
+                            self.y_hat = self.get_predict()
+                            self.resid = self.series - self.y_hat
                             self.theta_hat = new_theta
                             self.var_e = new_SSE / (len(e) - self.n)
                             self.cov_theta = self.var_e * np.linalg.inv(A)
-                            self.zero = new_system[0]
-                            self.pole = new_system[1]
                             break
 
                 if debug_info:
@@ -865,6 +873,53 @@ class SARIMA_Estimate:
                 for j in range(nb):
                     print(f'The estimated MA{j + 1} is {res[j]}')
                 res = res[nb:]
+
+    def get_predict(self):
+        para_l = [-1 * p for p in self.zero[1:]]
+        para_r = [p for p in self.pole[1:]]
+
+        self.y_hat = np.zeros([len(self.series), ])
+
+        for i in range(len(self.series)):
+            if i <= len(para_l) - 1:
+                init = np.r_[np.zeros(len(para_r) - 1 - i), self.series[:i + 1]]
+            else:
+                init = self.series[i - len(para_l): i]
+            et_1 = differencing(init)[: -1]
+            if len(et_1) < len(para_r) - 1:
+                et_1 = np.r_[et_1, np.zeros(len(para_r) - 1 - len(et_1))]
+            ls = np.matrix([0, 1])
+            rs = np.matrix([init[::-1] @ para_l + init[-1] * para_r[0] + et_1 @ para_r[1:], -para_r[0]])
+            tmp = ls - rs
+            cons = - tmp[:, 0]
+            fac = tmp[:, 1:]
+            sol = np.linalg.solve(fac, cons)
+            self.y_hat[i] = sol
+
+        return self.y_hat
+
+    def forecast(self, steps):
+        para_l = [-1 * p for p in self.zero[1:]]
+        para_r = [p for p in self.pole[1:]]
+        res = np.zeros([steps + len(para_l), ])
+        res[:len(para_l)] = self.series[-len(para_l):]
+
+        for i in range(steps):
+            init = res[i: len(para_l) + i]
+            et_1 = differencing(init)[: -1]
+            if len(et_1) < len(para_r) - 1:
+                et_1 = np.r_[et_1, np.zeros(len(para_r) - 1 - len(et_1))]
+
+            ls = np.matrix([0, 1])
+            rs = np.matrix([init[::-1] @ para_l + init[-1] * para_r[0] + et_1 @ para_r[1:], -para_r[0]])
+            tmp = ls - rs
+            cons = - tmp[:, 0]
+            fac = tmp[:, 1:]
+            sol = np.linalg.solve(fac, cons)
+
+            res[len(para_l) + i] = sol
+
+        return res[-steps:]
 
     def plot_prediction(self, start=None, end=None):
         fig, ax = plt.subplots()
