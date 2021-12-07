@@ -877,27 +877,23 @@ class SARIMA_Estimate:
     def get_predict(self):
         para_l = [-1 * p for p in self.zero[1:]]
         para_r = [p for p in self.pole[1:]]
-
         self.y_hat = np.zeros([len(self.series), ])
 
         for i in range(len(self.series)):
             if i <= len(para_l) - 1:
                 init = np.r_[np.zeros(len(para_r) - 1 - i), self.series[:i + 1]]
+                yt_1 = np.r_[np.zeros(len(para_r) - i), self.y_hat[:i]]
             else:
                 init = self.series[i - len(para_l): i]
-            et_1 = differencing(init)[: -1]
-            if len(et_1) < len(para_r) - 1:
-                et_1 = np.r_[et_1, np.zeros(len(para_r) - 1 - len(et_1))]
-            ls = np.matrix([0, 1])
-            rs = np.matrix([init[::-1] @ para_l + init[-1] * para_r[0] + et_1 @ para_r[1:], -para_r[0]])
-            tmp = ls - rs
-            cons = - tmp[:, 0]
-            fac = tmp[:, 1:]
-            sol = np.linalg.solve(fac, cons)
-            self.y_hat[i] = sol
+                yt_1 = self.y_hat[i - len(para_r): i]
+            et_1 = init - yt_1
+            ls = init[::-1] @ para_l
+            rs = et_1[::-1] @ para_r
+            self.y_hat[i] = ls + rs
 
         if type(self.series) == pd.Series:
             self.y_hat = pd.Series(self.y_hat, index=self.series.index)
+
         return self.y_hat
 
     def forecast(self, steps):
@@ -908,18 +904,13 @@ class SARIMA_Estimate:
 
         for i in range(steps):
             init = res[i: len(para_l) + i]
-            et_1 = differencing(init)[: -1]
-            if len(et_1) < len(para_r) - 1:
-                et_1 = np.r_[et_1, np.zeros(len(para_r) - 1 - len(et_1))]
+            et_1 = differencing(init)
+            if len(et_1) < len(para_r):
+                et_1 = np.r_[et_1, np.zeros(len(para_r) - len(et_1))]
 
-            ls = np.matrix([0, 1])
-            rs = np.matrix([init[::-1] @ para_l + init[-1] * para_r[0] + et_1 @ para_r[1:], -para_r[0]])
-            tmp = ls - rs
-            cons = - tmp[:, 0]
-            fac = tmp[:, 1:]
-            sol = np.linalg.solve(fac, cons)
-
-            res[len(para_l) + i] = sol
+            ls = init[::-1] @ para_l
+            rs = et_1[::-1] @ para_r
+            res[len(para_l) + i] = ls + rs
 
         return res[-steps:]
 
