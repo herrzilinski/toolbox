@@ -894,6 +894,8 @@ class SARIMA_Estimate:
         if type(self.series) == pd.Series:
             self.y_hat = pd.Series(self.y_hat, index=self.series.index)
 
+        if type(self.series) == pd.Series:
+            self.y_hat = pd.Series(self.y_hat, index=self.series.index)
         return self.y_hat
 
     def forecast(self, steps):
