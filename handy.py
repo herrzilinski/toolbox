@@ -1005,9 +1005,12 @@ def ACF_PACF_Plot(series, lags, series_name=None):
 
 
 def differencing(series, season=1, order=1):
+    order = int(order)
     if order > 1:
         temp = differencing(series, season, 1)
         return differencing(temp, season, order-1)
+    elif order == 0:
+        return series
     else:
         res = []
         for i in range(season, len(series)):
