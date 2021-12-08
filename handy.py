@@ -9,26 +9,29 @@ from scipy import signal
 import time
 
 
-def Rolling_Mean_Var(data, dataname=None):
+def Rolling_Mean_Var(data, dataname=None, aslist=False):
     mean = []
     var = []
     for j in range(len(data)):
         mean.append(np.mean(data[:j+1]))
         var.append(np.var(data[:j+1]))
-    fig, axs = plt.subplots(2)
-    if dataname is None:
-        fig.suptitle(f'Rolling Mean & Variance Plot')
+    if aslist:
+        return mean, var
     else:
-        fig.suptitle(f'Rolling Mean & Variance Plot of {dataname}')
-    axs[0].plot(mean)
-    axs[0].set(ylabel='Mean')
-    axs[0].grid()
-    axs[1].plot(var, 'tab:orange')
-    axs[1].set(ylabel='Variance')
-    axs[1].grid()
-    plt.xlabel('# of Samples')
-    fig.tight_layout()
-    fig.show()
+        fig, axs = plt.subplots(2)
+        if dataname is None:
+            fig.suptitle(f'Rolling Mean & Variance Plot')
+        else:
+            fig.suptitle(f'Rolling Mean & Variance Plot of {dataname}')
+        axs[0].plot(mean)
+        axs[0].set(ylabel='Mean')
+        axs[0].grid()
+        axs[1].plot(var, 'tab:orange')
+        axs[1].set(ylabel='Variance')
+        axs[1].grid()
+        plt.xlabel('# of Samples')
+        fig.tight_layout()
+        fig.show()
 
 
 def ADF_Cal(x):
@@ -894,8 +897,6 @@ class SARIMA_Estimate:
         if type(self.series) == pd.Series:
             self.y_hat = pd.Series(self.y_hat, index=self.series.index)
 
-        if type(self.series) == pd.Series:
-            self.y_hat = pd.Series(self.y_hat, index=self.series.index)
         return self.y_hat
 
     def forecast(self, steps):
