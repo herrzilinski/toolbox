@@ -892,8 +892,8 @@ class SARIMA_Estimate:
             et_1 = init - yt_1
             ls = init[::-1] @ para_l
             rs = et_1[::-1] @ para_r
-            res = ls + rs
-            self.y_hat[i] = res[:-1]
+            self.y_hat[i] = ls + rs
+            self.y_hat = self.y_hat[:-1]
 
         if type(self.series) == pd.Series:
             self.y_hat = pd.Series(self.y_hat, index=self.series.index)
