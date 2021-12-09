@@ -974,7 +974,7 @@ class SARIMA_Estimate:
     def residual_whiteness(self, lags, alpha=0.01):
         DOF = lags - self.n
         re = ACF_parameter(self.resid, lags, two_sided=False)
-        Q = len(self.resid) * np.sum((re[1:]) ** 2)
+        Q = len(self.resid) * np.sum((re[lags:]) ** 2)
         chi_crit = chi2.ppf(1 - alpha, DOF)
         print(f'Chi\u00b2 test Q value of residual is {Q}.')
         print(f'Critical value under alpha={alpha * 100}% is {chi_crit}')
@@ -984,7 +984,7 @@ class SARIMA_Estimate:
 
 def whiteness_test(e, lags, dof):
     re = ACF_parameter(e, lags, two_sided=False)
-    Q = len(e) * np.sum((re[1:]) ** 2)
+    Q = len(e) * np.sum((re[lags:]) ** 2)
     alpha = 0.01
     chi_crit = chi2.ppf(1 - alpha, dof)
     print(f'Chi\u00b2 test Q value of residual is {Q}.')
