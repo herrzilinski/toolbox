@@ -786,7 +786,7 @@ class SARIMA_Estimate:
                     self.zero = new_system[0]
                     self.pole = new_system[1]
                     self.y_hat = self.get_predict()
-                    self.resid = self.series - self.y_hat
+                    self.resid = self.series[1:] - self.y_hat
                     self.theta_hat = new_theta
                     self.var_e = new_SSE / (len(e) - self.n)
                     self.cov_theta = self.var_e * np.linalg.inv(A)
@@ -821,7 +821,7 @@ class SARIMA_Estimate:
                             self.zero = new_system[0]
                             self.pole = new_system[1]
                             self.y_hat = self.get_predict()
-                            self.resid = self.series - self.y_hat
+                            self.resid = self.series[1:] - self.y_hat
                             self.theta_hat = new_theta
                             self.var_e = new_SSE / (len(e) - self.n)
                             self.cov_theta = self.var_e * np.linalg.inv(A)
@@ -838,7 +838,7 @@ class SARIMA_Estimate:
                             self.zero = new_system[0]
                             self.pole = new_system[1]
                             self.y_hat = self.get_predict()
-                            self.resid = self.series - self.y_hat
+                            self.resid = self.series[1:] - self.y_hat
                             self.theta_hat = new_theta
                             self.var_e = new_SSE / (len(e) - self.n)
                             self.cov_theta = self.var_e * np.linalg.inv(A)
@@ -892,7 +892,8 @@ class SARIMA_Estimate:
             et_1 = init - yt_1
             ls = init[::-1] @ para_l
             rs = et_1[::-1] @ para_r
-            self.y_hat[i] = ls + rs
+            res = ls + rs
+            self.y_hat[i] = res[:-1]
 
         if type(self.series) == pd.Series:
             self.y_hat = pd.Series(self.y_hat, index=self.series.index)
@@ -905,7 +906,7 @@ class SARIMA_Estimate:
         res = np.zeros([steps + len(para_l), ])
         res[:len(para_l)] = self.series[-len(para_l):]
 
-        for i in range(steps):
+        for i in range(steps + 1):
             init = res[i: len(para_l) + i]
             et_1 = differencing(init)
             if len(et_1) < len(para_r):
@@ -915,7 +916,7 @@ class SARIMA_Estimate:
             rs = et_1[::-1] @ para_r
             res[len(para_l) + i] = ls + rs
 
-        return res[-steps:]
+        return res[-steps + 1:]
 
     def plot_prediction(self, start=None, end=None):
         fig, ax = plt.subplots()
