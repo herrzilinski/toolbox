@@ -986,7 +986,7 @@ class SARIMA_Estimate:
 
 def whiteness_test(e, lags, dof):
     re = ACF_parameter(e, lags, two_sided=False)
-    Q = len(e) * np.sum((re[lags:]) ** 2)
+    Q = len(e) * np.sum((re[1:]) ** 2)
     alpha = 0.01
     chi_crit = chi2.ppf(1 - alpha, dof)
     print(f'Chi\u00b2 test Q value of residual is {Q}.')
