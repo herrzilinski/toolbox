@@ -880,23 +880,24 @@ class SARIMA_Estimate:
     def get_predict(self):
         para_l = [-1 * p for p in self.zero[1:]]
         para_r = [p for p in self.pole[1:]]
-        self.y_hat = np.zeros([len(self.series), ])
+        res = np.zeros([len(self.series), ])
 
         for i in range(len(self.series)):
             if i <= len(para_l) - 1:
                 init = np.r_[np.zeros(len(para_r) - 1 - i), self.series[:i + 1]]
-                yt_1 = np.r_[np.zeros(len(para_r) - i), self.y_hat[:i]]
+                yt_1 = np.r_[np.zeros(len(para_r) - i), res[:i]]
             else:
-                init = self.series[i - len(para_l): i]
-                yt_1 = self.y_hat[i - len(para_r): i]
+                init = self.series[i - len(para_l) + 1: i + 1]
+                yt_1 = res[i - len(para_r): i]
             et_1 = init - yt_1
             ls = init[::-1] @ para_l
             rs = et_1[::-1] @ para_r
-            self.y_hat[i] = ls + rs
-            self.y_hat = self.y_hat[:-1]
+            res[i] = ls + rs
+
+        self.y_hat = res[:-1]
 
         if type(self.series) == pd.Series:
-            self.y_hat = pd.Series(self.y_hat, index=self.series.index)
+            self.y_hat = pd.Series(self.y_hat, index=self.series.index[1:])
 
         return self.y_hat
 
@@ -920,7 +921,7 @@ class SARIMA_Estimate:
 
     def plot_prediction(self, start=None, end=None):
         fig, ax = plt.subplots()
-        ax.plot(self.series[start: end], label='Training Data')
+        ax.plot(self.series[start + 1: end + 1], label='Training Data')
         ax.plot(self.y_hat[start: end], label='Predictions')
         fig.suptitle(f'One Step Ahead Predictions')
         ax.set(xlabel='# of samples', ylabel='value')
