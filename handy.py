@@ -921,7 +921,7 @@ class SARIMA_Estimate:
 
     def plot_prediction(self, start=None, end=None):
         fig, ax = plt.subplots()
-        ax.plot(self.series[start + 1: end + 1], label='Training Data')
+        ax.plot(self.series[1:][start: end], label='Training Data')
         ax.plot(self.y_hat[start: end], label='Predictions')
         fig.suptitle(f'One Step Ahead Predictions')
         ax.set(xlabel='# of samples', ylabel='value')
