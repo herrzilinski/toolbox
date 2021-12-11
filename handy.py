@@ -906,7 +906,29 @@ class SARIMA_Estimate:
         para_r = [p for p in self.pole[1:]]
         res = np.zeros([steps + len(para_l), ])
         res[:len(para_l)] = self.series[-len(para_l):]
-        et_h = self.series[-len(para_l):] - self.y_hat[-len(para_l) - 1: -1]
+
+        for i in range(steps):
+            init = res[i: len(para_l) + i]
+            et_1 = differencing(init)
+            if len(et_1) < len(para_r):
+                et_1 = np.r_[np.zeros(len(para_r) - len(et_1)), et_1]
+
+            ls = init[::-1] @ para_l
+            rs = et_1[::-1] @ para_r
+            res[len(para_l) + i] = ls + rs
+
+        return res[-steps:]
+
+    def forecast1(self, steps):
+        para_l = [-1 * p for p in self.zero[1:]]
+        para_r = [p for p in self.pole[1:]]
+        res = np.zeros([steps + len(para_l), ])
+        if type(self.series) == pd.Series:
+            res[:len(para_l)] = np.array(self.series)[-len(para_l):]
+            et_h = np.array(self.series)[-len(para_l):] - np.array(self.y_hat)[-len(para_l) - 1: -1]
+        else:
+            res[:len(para_l)] = self.series[-len(para_l):]
+            et_h = self.series[-len(para_l):] - self.y_hat[-len(para_l) - 1: -1]
 
         for i in range(steps):
             init = res[i: len(para_l) + i]
