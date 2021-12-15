@@ -179,7 +179,7 @@ def backward_selection(y, x, maxp=0.05):
             print(f'Dropped feature {dropped} with p-value {p_val.max():.4f}')
         if not updated:
             break
-    return lm
+    return lm, feature
 
 
 def MovingAverage_Cal(series, m=None, m2=None):
