@@ -7,6 +7,8 @@ from scipy.stats import chi2
 from statsmodels.tsa.stattools import adfuller, kpss
 from scipy import signal
 import time
+from urllib import request
+from bs4 import BeautifulSoup
 
 
 def Rolling_Mean_Var(data, dataname=None, aslist=False):
@@ -1043,4 +1045,11 @@ def differencing(series, season=1, order=1):
         for i in range(season, len(series)):
             res.append(series[i] - series[i-season])
         return np.array(res)
+
+
+def web_scrape(url):
+    response = request.urlopen(url)
+    raw_html = response.read().decode('utf8')
+    raw_text = BeautifulSoup(raw_html, 'html.parser').get_text()
+    return raw_text
 
