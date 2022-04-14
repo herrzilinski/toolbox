@@ -2,11 +2,17 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="jdk" jdkName="Python 3.8" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="GCP sftp://ubuntu@34.125.5.63:22/usr/bin/python3" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="DATS 6401 Visualization of Complex Data" />
     <orderEntry type="module" module-name="DATS 6450 Time Series Analysis &amp;Modeling" />
     <orderEntry type="module" module-name="IAFF 6186 Great Power Competition" />
     <orderEntry type="module" module-name="sample code" />
+    <orderEntry type="module" module-name="DATS 6312 Natural Language Processing" />
+    <orderEntry type="module" module-name="DATS 6203 Machine Learning II" />
+    <orderEntry type="module" module-name="FINA 6290 Quant Trading" />
+    <orderEntry type="module" module-name="ML2_Exam1" />
+    <orderEntry type="module" module-name="ML2_Exam2" />
+    <orderEntry type="module" module-name="6203FTP" />
   </component>
 </module>
