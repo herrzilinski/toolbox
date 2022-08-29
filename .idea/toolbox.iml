@@ -2,7 +2,7 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="jdk" jdkName="GCP sftp://ubuntu@34.125.5.63:22/usr/bin/python3" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.8" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="DATS 6401 Visualization of Complex Data" />
     <orderEntry type="module" module-name="DATS 6450 Time Series Analysis &amp;Modeling" />
@@ -14,5 +14,10 @@
     <orderEntry type="module" module-name="ML2_Exam1" />
     <orderEntry type="module" module-name="ML2_Exam2" />
     <orderEntry type="module" module-name="6203FTP" />
+    <orderEntry type="module" module-name="NLP_Final_Project" />
+    <orderEntry type="module" module-name="CM Project" />
+    <orderEntry type="module" module-name="fall-2022-a1-herrzilinski" />
+    <orderEntry type="module" module-name="ANLY 502 Big Data and Cloud Computing" />
+    <orderEntry type="module" module-name="HW1" />
   </component>
 </module>

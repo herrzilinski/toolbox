@@ -3,14 +3,19 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../DATS 6203 Machine Learning II/6203FTP/.idea/6203FTP.iml" filepath="$PROJECT_DIR$/../DATS 6203 Machine Learning II/6203FTP/.idea/6203FTP.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ANLY 502 Big Data and Cloud Computing/.idea/ANLY 502 Big Data and Cloud Computing.iml" filepath="$PROJECT_DIR$/../ANLY 502 Big Data and Cloud Computing/.idea/ANLY 502 Big Data and Cloud Computing.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../CM Project/.idea/CM Project.iml" filepath="$PROJECT_DIR$/../CM Project/.idea/CM Project.iml" />
       <module fileurl="file://$PROJECT_DIR$/../DATS 6203 Machine Learning II/.idea/DATS 6203 Machine Learning II.iml" filepath="$PROJECT_DIR$/../DATS 6203 Machine Learning II/.idea/DATS 6203 Machine Learning II.iml" />
       <module fileurl="file://$PROJECT_DIR$/../DATS 6312 Natural Language Processing/.idea/DATS 6312 Natural Language Processing.iml" filepath="$PROJECT_DIR$/../DATS 6312 Natural Language Processing/.idea/DATS 6312 Natural Language Processing.iml" />
       <module fileurl="file://$PROJECT_DIR$/../DATS 6401 Visualization of Complex Data/.idea/DATS 6401 Visualization of Complex Data.iml" filepath="$PROJECT_DIR$/../DATS 6401 Visualization of Complex Data/.idea/DATS 6401 Visualization of Complex Data.iml" />
       <module fileurl="file://$PROJECT_DIR$/../DATS 6450 Time Series Analysis &amp; Modeling/.idea/DATS 6450 Time Series Analysis &amp;Modeling.iml" filepath="$PROJECT_DIR$/../DATS 6450 Time Series Analysis &amp; Modeling/.idea/DATS 6450 Time Series Analysis &amp;Modeling.iml" />
       <module fileurl="file://$PROJECT_DIR$/../FINA 6290 Quant Trading/.idea/FINA 6290 Quant Trading.iml" filepath="$PROJECT_DIR$/../FINA 6290 Quant Trading/.idea/FINA 6290 Quant Trading.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ANLY 502 Big Data and Cloud Computing/HW1/.idea/HW1.iml" filepath="$PROJECT_DIR$/../ANLY 502 Big Data and Cloud Computing/HW1/.idea/HW1.iml" />
       <module fileurl="file://$PROJECT_DIR$/../IAFF 6186 Great Power Competition/.idea/IAFF 6186 Great Power Competition.iml" filepath="$PROJECT_DIR$/../IAFF 6186 Great Power Competition/.idea/IAFF 6186 Great Power Competition.iml" />
       <module fileurl="file://$PROJECT_DIR$/../ML2_Exam1/.idea/ML2_Exam1.iml" filepath="$PROJECT_DIR$/../ML2_Exam1/.idea/ML2_Exam1.iml" />
       <module fileurl="file://$PROJECT_DIR$/../ML2_Exam2/.idea/ML2_Exam2.iml" filepath="$PROJECT_DIR$/../ML2_Exam2/.idea/ML2_Exam2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../DATS 6312 Natural Language Processing/NLP_Final_Project/.idea/NLP_Final_Project.iml" filepath="$PROJECT_DIR$/../DATS 6312 Natural Language Processing/NLP_Final_Project/.idea/NLP_Final_Project.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ANLY 502 Big Data and Cloud Computing/fall-2022-a1-herrzilinski/.idea/fall-2022-a1-herrzilinski.iml" filepath="$PROJECT_DIR$/../ANLY 502 Big Data and Cloud Computing/fall-2022-a1-herrzilinski/.idea/fall-2022-a1-herrzilinski.iml" />
       <module fileurl="file://$PROJECT_DIR$/../sample code/.idea/sample code.iml" filepath="$PROJECT_DIR$/../sample code/.idea/sample code.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/toolbox.iml" filepath="$PROJECT_DIR$/.idea/toolbox.iml" />
     </modules>

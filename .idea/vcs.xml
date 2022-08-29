@@ -2,5 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../ANLY 502 Big Data and Cloud Computing" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../ANLY 502 Big Data and Cloud Computing/HW1" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../ANLY 502 Big Data and Cloud Computing/fall-2022-a1-herrzilinski" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../DATS 6312 Natural Language Processing/NLP_Final_Project" vcs="Git" />
   </component>
 </project>
