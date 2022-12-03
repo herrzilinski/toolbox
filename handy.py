@@ -106,7 +106,7 @@ def ACF_Plot(series, lag=None, ax=None, plt_kwargs={}, removeNA=False):
     return ax
 
 
-def GPAC_cal(series, lags, Lj, Lk, series_name=None, cmap='RdBu', ry_2=None, asfig=False, astable=False):
+def GPAC_cal(series, lags, Lj, Lk, series_name=None, cmap='RdBu', figlen=12, figwid=8, ry_2=None, asfig=False, astable=False):
     if ry_2 is not None:
         if not np.array_equal(ry_2, ry_2[::-1]):
             ry_2 = np.concatenate((np.reshape(ry_2[::-1], len(ry_2)), ry_2[1:]))
@@ -160,6 +160,7 @@ def GPAC_cal(series, lags, Lj, Lk, series_name=None, cmap='RdBu', ry_2=None, asf
     else:
         fig.suptitle(f'GPAC Table of {series_name}')
     fig.tight_layout()
+    fig.set_size_inches(figlen, figwid)
 
     if asfig:
         return fig
