@@ -8,7 +8,7 @@ from statsmodels.tsa.stattools import adfuller, kpss
 from scipy import signal
 import time
 from urllib import request
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 
 
 def Rolling_Mean_Var(data, dataname=None, aslist=False):
